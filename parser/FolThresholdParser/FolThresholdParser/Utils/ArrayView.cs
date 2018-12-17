@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace FolThresholdParser
+namespace FolThresholdParser.Utils
 {
     public struct ArrayView<T> : IEnumerable<T>
     {

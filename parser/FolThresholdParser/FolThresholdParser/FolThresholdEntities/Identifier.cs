@@ -1,7 +1,7 @@
 ﻿using System.Linq;
 using FolThresholdParser.Parser;
 
-namespace FolThresholdParser
+namespace FolThresholdParser.FolThresholdEntities
 {
     public class Identifier
     {

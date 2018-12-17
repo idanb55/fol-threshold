@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace FolThresholdParser
+namespace FolThresholdParser.FolThresholdEntities
 {
     public interface IExpression
     {

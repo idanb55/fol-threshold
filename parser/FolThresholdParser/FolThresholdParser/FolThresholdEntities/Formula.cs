@@ -1,6 +1,6 @@
 ﻿using FolThresholdParser.Parser;
 
-namespace FolThresholdParser
+namespace FolThresholdParser.FolThresholdEntities
 {
     public abstract class Formula
     {

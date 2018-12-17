@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using FolThresholdParser.Parser;
 
-namespace FolThresholdParser
+namespace FolThresholdParser.FolThresholdEntities
 {
     public abstract class NaturalExpression : IExpression
     {
