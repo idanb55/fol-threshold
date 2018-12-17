@@ -44,6 +44,7 @@ namespace FolThresholdParser
             {SyntaxKind.EmptySetKeyword, "emptyset"},
             {SyntaxKind.GlobalSetKeyword, "globalset"},
             {SyntaxKind.ConstantKeyword, "constant"},
+            {SyntaxKind.NaturalKeyword, "natural"},
             {SyntaxKind.QuorumKeyword, "quorum"},
             {SyntaxKind.AxiomKeyword, "axiom"},
             {SyntaxKind.ConjectureKeyword, "conjecture"},

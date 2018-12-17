@@ -1,4 +1,6 @@
-﻿namespace FolThresholdParser
+﻿using System.Linq;
+
+namespace FolThresholdParser
 {
     public class Identifier
     {
@@ -10,11 +12,38 @@
             Name = name;
             Constant = constant;
         }
+
+        public static Identifier Parse(ArrayView<Token> tokens)
+        {
+            var constant = false;
+            var tokenIndex = 0;
+            if (tokens[tokenIndex].Type == SyntaxKind.ConstantKeyword)
+            {
+                constant = true;
+                ++tokenIndex;
+            }
+            switch (tokens[tokenIndex].Type)
+            {
+                case SyntaxKind.NaturalKeyword:
+                    return Natural.Parse(constant, tokens.Skip(tokenIndex + 1));
+                case SyntaxKind.QuorumKeyword:
+                    return Quorum.Parse(constant, tokens.Skip(tokenIndex + 1));
+                default:
+                    return null;
+            }
+        }
     }
 
     public class Natural : Identifier
     {
         public Natural(bool constant, string name) : base(constant, name) { }
+
+        public static Natural Parse(bool constant, ArrayView<Token> tokens)
+        {
+            var token = tokens.Single();
+            if (token.Type != SyntaxKind.VariableNameToken) throw new IllegalNaturalName(token);
+            return new Natural(constant, token.Value);
+        }
     }
 
     public class Quorum : Identifier
@@ -26,6 +55,13 @@
         {
             Operation = operation;
             Expression = expression;
+        }
+
+        public static Quorum Parse(bool constant, ArrayView<Token> tokens)
+        {
+            if (tokens[0].GeneralType != SyntaxGeneralType.VariableName) throw new IllegalNaturalName(tokens[0]);
+            if (tokens[1].GeneralType != SyntaxGeneralType.ComparisonOperators) throw new IllegalNaturalName(tokens[1]);
+            return new Quorum(constant, tokens[0].Value, tokens[1].Type, NaturalExpression.Parse(tokens.Skip(2)));
         }
     }
 }

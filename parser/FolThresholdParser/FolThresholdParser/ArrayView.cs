@@ -27,11 +27,13 @@ namespace FolThresholdParser
         {
             get
             {
+                index += _offset;
                 CheckInbound(index);
                 return _array[index];
             }
             set
             {
+                index += _offset;
                 CheckInbound(index);
                 _array[index] = value;
             }
@@ -43,26 +45,21 @@ namespace FolThresholdParser
         {
             if (index < 0) throw new IndexOutOfRangeException();
             if (index < _offset) throw new IndexOutOfRangeException();
-            if (index > _offset + _length) throw new IndexOutOfRangeException();
-            if (index > _array.Length) throw new IndexOutOfRangeException();
+            if (index >= _offset + _length) throw new IndexOutOfRangeException();
+            if (index >= _array.Length) throw new IndexOutOfRangeException();
         }
 
         private ArrayView<T> CreateView(int newOffset, int newLength)
         {
             CheckInbound(newOffset);
-            CheckInbound(newLength);
+            if (newLength > 0) CheckInbound(newOffset + newLength - 1);
 
             return new ArrayView<T>(_array, newOffset, newLength);
         }
 
-        public ArrayView<T> Substring(int startIndex, int length)
-        {
-            return CreateView(_offset + startIndex, _offset + startIndex + length);
-        }
-
         public ArrayView<T> Skip(int items)
         {
-            return CreateView(_offset + items, _offset + -items);
+            return CreateView(_offset + items, _length - items);
         }
 
         public ArrayView<T> Take(int items)

@@ -8,29 +8,17 @@ namespace FolThresholdParser
     {
         public abstract IEnumerable<string> Variables { get; }
 
-        private static NaturalExpression ParseSingleToken(Token token)
-        {
-            switch (token.Type)
-            {
-                case SyntaxKind.VariableNameToken:
-                    return new NatVarExpression(token.Value);
-                case SyntaxKind.LiteralNumberToken:
-                    return new NatConstExpression(int.Parse(token.Value));
-                default:
-                    throw new Exception("Could not parse token");
-            }
-        }
-
-        internal static NaturalExpression Parse(ArrayView<Token> tokens)
+        public static NaturalExpression Parse(ArrayView<Token> tokens)
         {
             var cursor = 0;
             NaturalExpression leftExpr = null;
             if (tokens[0].Type == SyntaxKind.OpenParenthesisToken)
             {
                 var innerLength = tokens.IndexOfCloseParenthesis(cursor);
-                leftExpr = Parse(tokens.Skip(1).Take(innerLength).ToArray());
+                leftExpr = Parse(tokens.Skip(1).Take(innerLength));
                 cursor += innerLength + 1;
-            } else if (tokens[0].Type == SyntaxKind.VariableNameToken)
+            }
+            else if (tokens[0].Type == SyntaxKind.VariableNameToken)
             {
                 leftExpr = new NatVarExpression(tokens[0].Value);
                 ++cursor;
@@ -42,18 +30,21 @@ namespace FolThresholdParser
                 if (tokens[1].Type == SyntaxKind.OpenParenthesisToken)
                 {
                     var innerLength = tokens.IndexOfCloseParenthesis(cursor);
-                    leftExpr = new NatConstMulExpression((NatConstExpression)leftExpr, Parse(tokens.Skip(2).Take(innerLength).ToArray()));
+                    leftExpr = new NatConstMulExpression((NatConstExpression) leftExpr,
+                        Parse(tokens.Skip(2).Take(innerLength)));
                     cursor += innerLength + 1;
                 }
                 else if (tokens[1].Type == SyntaxKind.VariableNameToken)
                 {
-                    leftExpr = new NatConstMulExpression((NatConstExpression)leftExpr, new NatVarExpression(tokens[1].Value));
+                    leftExpr = new NatConstMulExpression((NatConstExpression) leftExpr,
+                        new NatVarExpression(tokens[1].Value));
                     ++cursor;
                 }
             }
-            if (cursor >= tokens.Length) return leftExpr;
 
-            return new NatOpExpression(leftExpr, tokens[cursor].Type, Parse(tokens.Skip(cursor+1).ToArray()));
+            return cursor >= tokens.Length
+                ? leftExpr
+                : new NatOpExpression(leftExpr, tokens[cursor].Type, Parse(tokens.Skip(cursor + 1)));
         }
     }
 
