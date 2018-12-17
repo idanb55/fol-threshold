@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using FolThresholdParser.Parser;
+using FolThresholdParser.Utils;
 
 namespace FolThresholdParser.FolThresholdEntities
 {
