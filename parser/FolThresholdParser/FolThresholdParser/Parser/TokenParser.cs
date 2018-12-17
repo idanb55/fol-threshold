@@ -1,23 +1,22 @@
 ﻿using System;
-using System.Collections.Generic;
 
-namespace FolThresholdParser
+namespace FolThresholdParser.Parser
 {
     public static class TokenParser
     {
-        public static int IndexOfCloseParenthesis(this ArrayView<Token> tokens, int offset)
+        public static int IndexOfCloseParenthesis(this ArrayView<Token> tokens)
         {
-            if (tokens[offset].Type != SyntaxKind.OpenParenthesisToken)
-                throw new Exception($"Expected {SyntaxKind.OpenParenthesisToken}");
+            if (tokens[0].Type != SyntaxKind.OpenParenthesisToken)
+                throw new ParserTokenException("Illegal quorum name", tokens[0]);
             var counter = 1;
-            for (var index = offset + 1;  index < tokens.Length; ++index)
+            for (var index = 1;  index < tokens.Length; ++index)
             {
                 if (tokens[index].Type == SyntaxKind.OpenParenthesisToken) ++counter;
                 if (tokens[index].Type == SyntaxKind.CloseParenthesisToken) --counter;
-                if (counter == 0) return index - offset - 1;
+                if (counter == 0) return index - 1;
             }
 
-            throw new Exception("Illegal Parenthesis hierarchy");
+            throw new ParserTokenException("Illegal parenthesis hierarchy", tokens[0]);
         }
 
         public static int IndexOfFirstSyntaxKind(this ArrayView<Token> tokens, SyntaxGeneralType kind)
@@ -26,7 +25,7 @@ namespace FolThresholdParser
             {
                 if (tokens[index].GeneralType == kind) return index;
             }
-            throw new Exception("Could not find element of type");
+            throw new ParserTokenException($"Missing literal of type {kind}", tokens[0]);
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using FolThresholdParser.Parser;
 
 namespace FolThresholdParser
 {
@@ -14,7 +15,7 @@ namespace FolThresholdParser
             NaturalExpression leftExpr = null;
             if (tokens[0].Type == SyntaxKind.OpenParenthesisToken)
             {
-                var innerLength = tokens.IndexOfCloseParenthesis(cursor);
+                var innerLength = tokens.Skip(cursor).IndexOfCloseParenthesis();
                 leftExpr = Parse(tokens.Skip(1).Take(innerLength));
                 cursor += innerLength + 1;
             }
@@ -29,7 +30,7 @@ namespace FolThresholdParser
                 ++cursor;
                 if (tokens[1].Type == SyntaxKind.OpenParenthesisToken)
                 {
-                    var innerLength = tokens.IndexOfCloseParenthesis(cursor);
+                    var innerLength = tokens.Skip(cursor).IndexOfCloseParenthesis();
                     leftExpr = new NatConstMulExpression((NatConstExpression) leftExpr,
                         Parse(tokens.Skip(2).Take(innerLength)));
                     cursor += innerLength + 1;

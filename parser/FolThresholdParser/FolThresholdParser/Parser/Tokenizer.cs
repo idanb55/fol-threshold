@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 
-namespace FolThresholdParser
+namespace FolThresholdParser.Parser
 {
     public class Tokenizer : IEnumerable<Token>
     {
@@ -139,7 +139,7 @@ namespace FolThresholdParser
     [Serializable]
     internal class CountNotTokenizeCharException : Exception
     {
-        public CountNotTokenizeCharException(string code, int cursor) : base($"parse error: {code} could not be tokenized on col {cursor} ({code.Substring(cursor)})")
+        public CountNotTokenizeCharException(string code, int cursor) : base($"parse error: {code} could not be parsed on col {cursor} ({code.Substring(cursor)})")
         {
         }
     }

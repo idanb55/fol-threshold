@@ -1,4 +1,6 @@
-﻿namespace FolThresholdParser
+﻿using FolThresholdParser.Parser;
+
+namespace FolThresholdParser
 {
     public abstract class Formula
     {

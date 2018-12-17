@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using FolThresholdParser.Parser;
 
 namespace FolThresholdParser
 {
@@ -41,7 +42,7 @@ namespace FolThresholdParser
         public static Natural Parse(bool constant, ArrayView<Token> tokens)
         {
             var token = tokens.Single();
-            if (token.Type != SyntaxKind.VariableNameToken) throw new IllegalNaturalName(token);
+            if (token.Type != SyntaxKind.VariableNameToken) throw new ParserTokenException("Illegal natural number", token);
             return new Natural(constant, token.Value);
         }
     }
@@ -59,8 +60,8 @@ namespace FolThresholdParser
 
         public static Quorum Parse(bool constant, ArrayView<Token> tokens)
         {
-            if (tokens[0].GeneralType != SyntaxGeneralType.VariableName) throw new IllegalNaturalName(tokens[0]);
-            if (tokens[1].GeneralType != SyntaxGeneralType.ComparisonOperators) throw new IllegalNaturalName(tokens[1]);
+            if (tokens[0].GeneralType != SyntaxGeneralType.VariableName) throw new ParserTokenException("Illegal quorum name", tokens[0]);
+            if (tokens[1].GeneralType != SyntaxGeneralType.ComparisonOperators) throw new ParserTokenException("expected comparison operator", tokens[0]);
             return new Quorum(constant, tokens[0].Value, tokens[1].Type, NaturalExpression.Parse(tokens.Skip(2)));
         }
     }

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text.RegularExpressions;
 
-namespace FolThresholdParser
+namespace FolThresholdParser.Parser
 {
     public enum SyntaxGeneralType
     {
