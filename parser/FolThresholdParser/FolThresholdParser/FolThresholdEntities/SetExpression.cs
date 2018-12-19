@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using FolThresholdParser.BapaFormula;
 using FolThresholdParser.Parser;
 using FolThresholdParser.Utils;
 
@@ -8,7 +9,7 @@ namespace FolThresholdParser.FolThresholdEntities
 {
     public abstract class SetExpression : IExpression
     {
-        public abstract IEnumerable<string> Variables { get; }
+        public abstract IEnumerable<string> VariablesToBind { get; }
 
         public static SetExpression Parse(ArrayView<Token> tokens)
         {
@@ -62,6 +63,8 @@ namespace FolThresholdParser.FolThresholdEntities
                 ? leftExpr
                 : new SetOpExpression(leftExpr, tokens[cursor].Type, Parse(tokens.Skip(cursor + 1)));
         }
+
+        public abstract BapaSetExpression ToBapaSetExpression();
     }
 
     public class SetVarExpression : SetExpression
@@ -73,7 +76,12 @@ namespace FolThresholdParser.FolThresholdEntities
             Name = name;
         }
 
-        public override IEnumerable<string> Variables => new []{Name};
+        public override IEnumerable<string> VariablesToBind => new string[0];
+
+        public override BapaSetExpression ToBapaSetExpression()
+        {
+            return new BapaSetVar(Name);
+        }
     }
 
     public class SetVarInstanceExpression : SetExpression
@@ -81,13 +89,20 @@ namespace FolThresholdParser.FolThresholdEntities
         protected readonly string Name;
         protected readonly int Index;
 
+        private string FullName => $"{Name}{Index}";
+
         public SetVarInstanceExpression(string name, int index)
         {
             Name = name;
             Index = index;
         }
 
-        public override IEnumerable<string> Variables => new[] { Name };
+        public override IEnumerable<string> VariablesToBind => new[] { FullName };
+
+        public override BapaSetExpression ToBapaSetExpression()
+        {
+            return new BapaSetVar(FullName);
+        }
     }
 
     public class SetOpExpression : SetExpression
@@ -96,13 +111,32 @@ namespace FolThresholdParser.FolThresholdEntities
         protected readonly SyntaxKind Op;
         protected readonly SetExpression Expr2;
 
-        public override IEnumerable<string> Variables => Expr1.Variables.Concat(Expr2.Variables);
+        public override IEnumerable<string> VariablesToBind => Expr1.VariablesToBind.Concat(Expr2.VariablesToBind);
 
         public SetOpExpression(SetExpression expr1, SyntaxKind setOperation, SetExpression expr2)
         {
             Expr1 = expr1;
             Op = setOperation;
             Expr2 = expr2;
+        }
+
+        private static BapaSetOperation.SetRelation GetOperation(SyntaxKind op)
+        {
+            switch (op)
+            {
+                case SyntaxKind.AndOperationToken:
+                    return BapaSetOperation.SetRelation.Intersection;
+                case SyntaxKind.OrOperationToken:
+                    return BapaSetOperation.SetRelation.Union;
+                default:
+                    throw new Exception("Illegal Natural operation");
+            }
+        }
+
+        public override BapaSetExpression ToBapaSetExpression()
+        {
+            return new BapaSetOperation(GetOperation(Op),
+                new[] {Expr1.ToBapaSetExpression(), Expr2.ToBapaSetExpression()});
         }
     }
 
@@ -115,6 +149,11 @@ namespace FolThresholdParser.FolThresholdEntities
             Expr = expr;
         }
 
-        public override IEnumerable<string> Variables => Expr.Variables;
+        public override IEnumerable<string> VariablesToBind => Expr.VariablesToBind;
+
+        public override BapaSetExpression ToBapaSetExpression()
+        {
+            return new BapaSetComplement(Expr.ToBapaSetExpression());
+        }
     }
 }

@@ -1,4 +1,6 @@
-﻿namespace FolThresholdParser.BapaFormula
+﻿using System.Linq;
+
+namespace FolThresholdParser.BapaFormula
 {
     public abstract class BapaFormula
     {
@@ -52,7 +54,7 @@
     public class BapaNatRelation : BapaFormula
     {
         private readonly NatRelation _operation;
-        private readonly BapaSetExpression _expr1;
+        private readonly BapaNatExpression _expr1;
         private readonly BapaNatExpression _expr2;
 
         public enum NatRelation
@@ -65,7 +67,7 @@
             Intneq
         }
 
-        public BapaNatRelation(NatRelation operation, BapaSetExpression expr1, BapaNatExpression expr2)
+        public BapaNatRelation(NatRelation operation, BapaNatExpression expr1, BapaNatExpression expr2)
         {
             _operation = operation;
             _expr1 = expr1;
@@ -82,7 +84,7 @@
     {
         private readonly SetRelation _operation;
         private readonly BapaSetExpression _expr1;
-        private readonly BapaNatExpression _expr2;
+        private readonly BapaSetExpression _expr2;
 
         public enum SetRelation
         {
@@ -90,7 +92,7 @@
             Subseteq
         }
 
-        public BapaSetRelation(SetRelation operation, BapaSetExpression expr1, BapaNatExpression expr2)
+        public BapaSetRelation(SetRelation operation, BapaSetExpression expr1, BapaSetExpression expr2)
         {
             _operation = operation;
             _expr1 = expr1;
@@ -100,6 +102,28 @@
         public override string ToOcamlBapa()
         {
             return $"{_operation} ({_expr1.ToOcamlBapa()}, {_expr2.ToOcamlBapa()})";
+        }
+    }
+
+    public class BapaFormulaOperation : BapaFormula
+    {
+        private readonly NatRelation _operation;
+        private readonly BapaFormula[] _formulas;
+
+        public enum NatRelation
+        {
+            And,
+        }
+
+        public BapaFormulaOperation(NatRelation operation, BapaFormula[] formulas)
+        {
+            _operation = operation;
+            _formulas = formulas;
+        }
+
+        public override string ToOcamlBapa()
+        {
+            return $"{_operation} [{string.Join("; ", _formulas.Select(expr => expr.ToOcamlBapa()).ToArray())}]";
         }
     }
 

@@ -55,22 +55,47 @@ namespace FolThresholdParser.BapaFormula
     public class BapaNatOperation : BapaNatExpression
     {
         private readonly NatRelation _operation;
-        private readonly BapaNatExpression[] _expressions;
+        private readonly BapaNatExpression _expr1;
+        private readonly BapaNatExpression _expr2;
+
+        public enum NatRelation
+        {
+            Plus, Minus
+        }
+
+        public BapaNatOperation(NatRelation operation, BapaNatExpression expr1, BapaNatExpression expr2)
+        {
+            _operation = operation;
+            _expr1 = expr1;
+            _expr2 = expr2;
+        }
+
+        public override string ToOcamlBapa()
+        {
+            return $"{_operation} [{_expr1.ToOcamlBapa()}; {_expr2.ToOcamlBapa()}]";
+        }
+    }
+
+    public class BapaNatConstantMul : BapaNatExpression
+    {
+        private readonly int _constant;
+        private readonly BapaNatExpression _expr;
 
         public enum NatRelation
         {
             Plus,
         }
 
-        public BapaNatOperation(NatRelation operation, BapaNatExpression[] expressions)
+        public BapaNatConstantMul(int constant, BapaNatExpression expr)
         {
-            _operation = operation;
-            _expressions = expressions;
+            _constant = constant;
+            _expr = expr;
         }
 
         public override string ToOcamlBapa()
         {
-            return $"{_operation} [{string.Join("; ", _expressions.Select(expr => expr.ToOcamlBapa()).ToArray())}]";
+            return
+                $"{BapaNatOperation.NatRelation.Plus} [{string.Join("; ", Enumerable.Repeat(_expr.ToOcamlBapa(), _constant).ToArray())}]";
         }
     }
 }

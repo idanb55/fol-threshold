@@ -1,4 +1,8 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.RegularExpressions;
+using FolThresholdParser.BapaFormula;
 using FolThresholdParser.Parser;
 using FolThresholdParser.Utils;
 
@@ -34,6 +38,30 @@ namespace FolThresholdParser.FolThresholdEntities
                     return null;
             }
         }
+
+        private static readonly Regex BoundVariableNameRegex = new Regex("([a-z]*)([A-Z]*)([0-9]+)");
+
+        public static BapaBind.BapaBindType BapaBindType(Dictionary<string, Identifier> identifiers, string variable)
+        {
+            var match = BoundVariableNameRegex.Match(variable);
+            if (!match.Success) throw new Exception($"Illegal variable name: {variable}");
+            var existsName = match.Groups[1].Value;
+            var forallName = match.Groups[2].Value;
+            if (!string.IsNullOrEmpty(existsName) && !string.IsNullOrEmpty(forallName))
+                throw new Exception($"Illegal variable name: {variable}");
+            BapaBind.BapaBindType type;
+            if (!string.IsNullOrEmpty(existsName) && identifiers[existsName] is Natural)
+                type = BapaBind.BapaBindType.Existsnat;
+            else if (!string.IsNullOrEmpty(existsName) && identifiers[existsName] is Quorum)
+                type = BapaBind.BapaBindType.Existsset;
+            else if (!string.IsNullOrEmpty(forallName) && identifiers[forallName.ToLower()] is Natural)
+                type = BapaBind.BapaBindType.Forallnat;
+            else if (!string.IsNullOrEmpty(forallName) && identifiers[forallName.ToLower()] is Quorum)
+                type = BapaBind.BapaBindType.Forallset;
+            else
+                throw new Exception($"Illegal variable name: {variable}");
+            return type;
+        }
     }
 
     public class Natural : Identifier
@@ -64,6 +92,14 @@ namespace FolThresholdParser.FolThresholdEntities
             if (tokens[0].GeneralType != SyntaxGeneralType.VariableName) throw new ParserTokenException("Illegal quorum name", tokens[0]);
             if (tokens[1].GeneralType != SyntaxGeneralType.ComparisonOperators) throw new ParserTokenException("expected comparison operator", tokens[0]);
             return new Quorum(constant, tokens[0].Value, tokens[1].Type, NaturalExpression.Parse(tokens.Skip(2)));
+        }
+
+        public BapaFormula.BapaFormula GetQuorumAssumption()
+        {
+            BapaFormula.BapaFormula formula = new BapaNatRelation(NaturalFormula.ToNatRelation(Operation), new BapaCard(new BapaSetVar(Name)), Expression.ToBapaNatExpression());
+            if (!Constant)
+                formula = new BapaBind(BapaBind.BapaBindType.Forallset, Name, formula);
+            return formula;
         }
     }
 }

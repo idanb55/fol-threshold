@@ -16,7 +16,7 @@ conjecture nonempty B1 & ~f
 conjecture nonempty C1 & ~f
 conjecture relation a1 <= ~f
 
-conjecture relation a1 & ~f
+conjecture nonempty a1 & ~f
 
 # Weak 
 axiom natural n > 5t

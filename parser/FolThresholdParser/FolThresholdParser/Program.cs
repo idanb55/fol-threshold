@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Windows.Forms;
 using FolThresholdParser.Parser;
 
 namespace FolThresholdParser
@@ -15,10 +16,12 @@ namespace FolThresholdParser
                 {
                     system.ParseCode(t.ToArray());
                 }
+
+                Console.WriteLine(system.ToBapaFormula().ToOcamlBapa());
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                Console.WriteLine(ex);
             }
 
             Console.Read();

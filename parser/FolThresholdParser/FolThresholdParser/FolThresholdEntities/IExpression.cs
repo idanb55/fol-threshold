@@ -4,6 +4,6 @@ namespace FolThresholdParser.FolThresholdEntities
 {
     public interface IExpression
     {
-        IEnumerable<string> Variables { get; }
+        IEnumerable<string> VariablesToBind { get; }
     }
 }

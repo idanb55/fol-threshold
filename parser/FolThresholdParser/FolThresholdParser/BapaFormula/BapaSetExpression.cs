@@ -26,15 +26,15 @@ namespace FolThresholdParser.BapaFormula
 
     public class BapaSetOperation : BapaSetExpression
     {
-        private readonly NatRelation _operation;
+        private readonly SetRelation _operation;
         private readonly BapaSetExpression[] _expressions;
 
-        public enum NatRelation
+        public enum SetRelation
         {
             Union, Intersection,
         }
 
-        public BapaSetOperation(NatRelation operation, BapaSetExpression[] expressions)
+        public BapaSetOperation(SetRelation operation, BapaSetExpression[] expressions)
         {
             _operation = operation;
             _expressions = expressions;
@@ -43,6 +43,21 @@ namespace FolThresholdParser.BapaFormula
         public override string ToOcamlBapa()
         {
             return $"{_operation} [{string.Join("; ", _expressions.Select(expr => expr.ToOcamlBapa()).ToArray())}]";
+        }
+    }
+
+    public class BapaSetComplement : BapaSetExpression
+    {
+        private readonly BapaSetExpression _expression;
+
+        public BapaSetComplement(BapaSetExpression expression)
+        {
+            _expression = expression;
+        }
+
+        public override string ToOcamlBapa()
+        {
+            return $"Complement [{_expression.ToOcamlBapa()}]";
         }
     }
 }
