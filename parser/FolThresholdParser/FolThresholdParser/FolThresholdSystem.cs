@@ -68,5 +68,25 @@ namespace FolThresholdParser
                         identifier is Natural ? BapaBind.BapaBindType.Forallnat : BapaBind.BapaBindType.Forallset,
                         identifier.Name, current));
         }
+
+        public IEnumerable<string> ToIvyAxioms()
+        {
+            yield return "type node";
+            foreach (var quorum in _identifiers.Values.OfType<Quorum>().Where(quo => !quo.Constant))
+            {
+                yield return $"type quorum_{quorum.Name} # {Tokenizer.Keywords[quorum.Operation]} {quorum.Expression}";
+            }
+
+            foreach (var quorum in _identifiers.Values.OfType<Quorum>())
+            {
+                if (quorum.Constant) yield return $"relation {quorum.Name}(N:node)";
+                else yield return $"relation member_{quorum.Name}(N:node, Q:quorum_{quorum.Name})";
+            }
+
+            foreach (var formula in _formulas.Where(form => form.Conjecture))
+            {
+                yield return formula.ToBoundIvyAxiom(_identifiers);
+            }
+        }
     }
 }

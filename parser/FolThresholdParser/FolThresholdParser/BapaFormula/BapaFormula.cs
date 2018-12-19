@@ -13,12 +13,12 @@ namespace FolThresholdParser.BapaFormula
         private readonly string _varName;
         private readonly BapaFormula _inner;
 
-        public enum BapaBindType
+        public enum BapaBindType : int
         {
-            Forallnat,
-            Existsnat,
+            Existsset,
             Forallset,
-            Existsset
+            Existsnat,
+            Forallnat,
         }
 
         public BapaBind(BapaBindType type, string varName, BapaFormula inner)

@@ -65,6 +65,8 @@ namespace FolThresholdParser.FolThresholdEntities
         }
 
         public abstract BapaSetExpression ToBapaSetExpression();
+
+        public abstract string ToIvyAxiom();
     }
 
     public class SetVarExpression : SetExpression
@@ -81,6 +83,11 @@ namespace FolThresholdParser.FolThresholdEntities
         public override BapaSetExpression ToBapaSetExpression()
         {
             return new BapaSetVar(Name);
+        }
+
+        public override string ToIvyAxiom()
+        {
+            return $"{Name}(N)";
         }
     }
 
@@ -102,6 +109,11 @@ namespace FolThresholdParser.FolThresholdEntities
         public override BapaSetExpression ToBapaSetExpression()
         {
             return new BapaSetVar(FullName);
+        }
+
+        public override string ToIvyAxiom()
+        {
+            return $"member_{Name}(N, {FullName})";
         }
     }
 
@@ -138,6 +150,11 @@ namespace FolThresholdParser.FolThresholdEntities
             return new BapaSetOperation(GetOperation(Op),
                 new[] {Expr1.ToBapaSetExpression(), Expr2.ToBapaSetExpression()});
         }
+
+        public override string ToIvyAxiom()
+        {
+            return $"{Expr1.ToIvyAxiom()} {Tokenizer.Keywords[Op]} {Expr2.ToIvyAxiom()})";
+        }
     }
 
     public class SetComplementExpression : SetExpression
@@ -154,6 +171,11 @@ namespace FolThresholdParser.FolThresholdEntities
         public override BapaSetExpression ToBapaSetExpression()
         {
             return new BapaSetComplement(Expr.ToBapaSetExpression());
+        }
+
+        public override string ToIvyAxiom()
+        {
+            return $"~{Expr.ToIvyAxiom()}";
         }
     }
 }

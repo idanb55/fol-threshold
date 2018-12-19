@@ -74,6 +74,12 @@ namespace FolThresholdParser.FolThresholdEntities
         {
             return new BapaNatConst(Constant);
         }
+
+        public override string ToString()
+        {
+            return Constant.ToString();
+        }
+
     }
 
     public class NatVarExpression : NaturalExpression
@@ -97,6 +103,11 @@ namespace FolThresholdParser.FolThresholdEntities
         {
             return new BapaNatVar(Name);
         }
+
+        public override string ToString()
+        {
+            return Name;
+        }
     }
 
     public class NatConstMulExpression : NaturalExpression
@@ -115,6 +126,11 @@ namespace FolThresholdParser.FolThresholdEntities
         public override BapaNatExpression ToBapaNatExpression()
         {
             return new BapaNatConstantMul(Constant.Constant, Expr.ToBapaNatExpression());
+        }
+
+        public override string ToString()
+        {
+            return Expr is NatVarExpression ? $"{Constant}{Expr}" : $"{Constant}({Expr})";
         }
     }
 
@@ -149,6 +165,11 @@ namespace FolThresholdParser.FolThresholdEntities
         public override BapaNatExpression ToBapaNatExpression()
         {
             return new BapaNatOperation(GetOperation(Op), Expr1.ToBapaNatExpression(), Expr2.ToBapaNatExpression());
+        }
+
+        public override string ToString()
+        {
+            return $"{Expr1} {Tokenizer.Keywords[Op]} {Expr2}";
         }
     }
 }

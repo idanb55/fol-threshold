@@ -38,7 +38,7 @@ namespace FolThresholdParser.Parser
             {SyntaxKind.WhitespaceToken,   new Regex("^\\s+")   }
         };
 
-        private static readonly Dictionary<SyntaxKind, string> Keywords = new Dictionary<SyntaxKind, string>
+        public static readonly Dictionary<SyntaxKind, string> Keywords = new Dictionary<SyntaxKind, string>
         {
             // keywords
             {SyntaxKind.EmptySetKeyword, "emptyset"},

@@ -18,6 +18,11 @@ namespace FolThresholdParser
                 }
 
                 Console.WriteLine(system.ToBapaFormula().ToOcamlBapa());
+                Console.WriteLine();
+                foreach (var ivyAxiom in system.ToIvyAxioms())
+                {
+                    Console.WriteLine(ivyAxiom);
+                }
             }
             catch (Exception ex)
             {

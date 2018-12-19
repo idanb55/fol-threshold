@@ -36,7 +36,7 @@ namespace FolThresholdParser.FolThresholdEntities
 
         public abstract IEnumerable<string> VariablesToBind { get; }
 
-        public Dictionary<string, BapaBind.BapaBindType> GetVariablesToBind(Dictionary<string, Identifier> identifiers)
+        public IEnumerable<KeyValuePair<string, BapaBind.BapaBindType>> GetVariablesToBind(Dictionary<string, Identifier> identifiers)
         {
             var res = new Dictionary<string, BapaBind.BapaBindType>();
             foreach (var variable in VariablesToBind)
@@ -44,7 +44,7 @@ namespace FolThresholdParser.FolThresholdEntities
                 var type = Identifier.BapaBindType(identifiers, variable);
                 res[variable] = type;
             }
-            return res;
+            return res.OrderBy(pair => pair.Value);
         }
 
         public BapaFormula.BapaFormula ToBoundBapaFormula(Dictionary<string, Identifier> identifiers)
@@ -59,6 +59,31 @@ namespace FolThresholdParser.FolThresholdEntities
         }
 
         public abstract BapaFormula.BapaFormula ToBapaFormula();
+
+        public string ToBoundIvyAxiom(Dictionary<string, Identifier> identifiers)
+        {
+            var formula = ToIvyAxiom();
+            foreach (var bind in GetVariablesToBind(identifiers))
+            {
+                var varName = bind.Key;
+                var quorumName = varName.TrimEnd('0', '1', '2', '3', '4', '5', '6', '7', '8', '9');
+                switch (bind.Value)
+                {
+                    case BapaBind.BapaBindType.Forallset:
+                        formula = $"forall {varName}:quorum_{quorumName}. {formula}";
+                        break;
+                    case BapaBind.BapaBindType.Existsset:
+                        formula = $"exsits {varName}:quorum_{quorumName}. {formula}";
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+            }
+
+            return formula;
+        }
+
+        public abstract string ToIvyAxiom();
     }
 
     public class NaturalFormula : Formula
@@ -116,6 +141,11 @@ namespace FolThresholdParser.FolThresholdEntities
         {
             return new BapaNatRelation(ToNatRelation(), Expr1.ToBapaNatExpression(), Expr2.ToBapaNatExpression());
         }
+
+        public override string ToIvyAxiom()
+        {
+            throw new Exception("Naturals cannot be a part of Ivy axiom");
+        }
     }
 
     public class NonEmptySetFormula : Formula
@@ -135,6 +165,11 @@ namespace FolThresholdParser.FolThresholdEntities
         public override BapaFormula.BapaFormula ToBapaFormula()
         {
             return new BapaNatRelation(BapaNatRelation.NatRelation.Intneq, new BapaCard(Expr.ToBapaSetExpression()), new BapaNatConst(0));
+        }
+
+        public override string ToIvyAxiom()
+        {
+            return "exists N:node. " + Expr.ToIvyAxiom();
         }
 
         public override IEnumerable<string> VariablesToBind => Expr.VariablesToBind;
@@ -164,8 +199,6 @@ namespace FolThresholdParser.FolThresholdEntities
         {
             switch (ComparisonOp)
             {
-                case SyntaxKind.LessThanToken:
-                    return BapaSetRelation.SetRelation.Subset;
                 case SyntaxKind.LeqThanToken:
                     return BapaSetRelation.SetRelation.Subseteq;
                 default:
@@ -178,6 +211,11 @@ namespace FolThresholdParser.FolThresholdEntities
         public override BapaFormula.BapaFormula ToBapaFormula()
         {
             return new BapaSetRelation(ToSetRelation(), Expr1.ToBapaSetExpression(), Expr1.ToBapaSetExpression());
+        }
+
+        public override string ToIvyAxiom()
+        {
+            return "forall N:node. " + Expr1.ToIvyAxiom() + " -> " + Expr2.ToIvyAxiom();
         }
     }
 }
