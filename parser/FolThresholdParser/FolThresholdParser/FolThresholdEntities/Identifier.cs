@@ -41,6 +41,22 @@ namespace FolThresholdParser.FolThresholdEntities
 
         private static readonly Regex BoundVariableNameRegex = new Regex("([a-z]*)([A-Z]*)([0-9]+)");
 
+        public static Identifier GetIdentifier(Dictionary<string, Identifier> identifiers, string variable, out int index)
+        {
+            var match = BoundVariableNameRegex.Match(variable);
+            if (!match.Success) throw new Exception($"Illegal variable name: {variable}");
+            var existsName = match.Groups[1].Value;
+            var forallName = match.Groups[2].Value;
+            if (!string.IsNullOrEmpty(existsName) && !string.IsNullOrEmpty(forallName))
+                throw new Exception($"Illegal variable name: {variable}");
+            index = int.Parse(match.Groups[3].Value);
+            if (!string.IsNullOrEmpty(existsName))
+                return identifiers[existsName];
+            if (!string.IsNullOrEmpty(forallName))
+                return identifiers[forallName.ToLower()];
+            throw new Exception($"Illegal variable name: {variable}");
+        }
+
         public static BapaBind.BapaBindType BapaBindType(Dictionary<string, Identifier> identifiers, string variable)
         {
             var match = BoundVariableNameRegex.Match(variable);
@@ -94,11 +110,11 @@ namespace FolThresholdParser.FolThresholdEntities
             return new Quorum(constant, tokens[0].Value, tokens[1].Type, NaturalExpression.Parse(tokens.Skip(2)));
         }
 
-        public BapaFormula.BapaFormula GetQuorumAssumption()
+        public BapaFormula.BapaFormula GetQuorumAssumption(int index = 0)
         {
-            BapaFormula.BapaFormula formula = new BapaNatRelation(NaturalFormula.ToNatRelation(Operation), new BapaCard(new BapaSetVar(Name)), Expression.ToBapaNatExpression());
-            if (!Constant)
-                formula = new BapaBind(BapaBind.BapaBindType.Forallset, Name, formula);
+            var name = Name;
+            if (!Constant) name += index;
+            BapaFormula.BapaFormula formula = new BapaNatRelation(NaturalFormula.ToNatRelation(Operation), new BapaCard(new BapaSetVar(name)), Expression.ToBapaNatExpression());
             return formula;
         }
     }

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using System.Windows.Forms;
 using FolThresholdParser.Parser;
 
 namespace FolThresholdParser
@@ -17,7 +16,8 @@ namespace FolThresholdParser
                     system.ParseCode(t.ToArray());
                 }
 
-                Console.WriteLine(system.ToBapaFormula().ToOcamlBapa());
+                var ocamlBapaString = system.ToBapaFormula().ToOcamlBapa();
+                Console.WriteLine(ocamlBapaString);
                 Console.WriteLine();
                 foreach (var ivyAxiom in system.ToIvyAxioms())
                 {

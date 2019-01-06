@@ -55,12 +55,12 @@ namespace FolThresholdParser
             var assumptions = _formulas.Where(formula => !formula.Conjecture);
             var conjectures = _formulas.Where(formula => formula.Conjecture);
 
-            var quorumAssumption = _identifiers.Values.OfType<Quorum>().Select(quorum => quorum.GetQuorumAssumption());
+            var quorumAssumption = _identifiers.Values.OfType<Quorum>().Where(quorum => quorum.Constant).Select(quorum => quorum.GetQuorumAssumption());
             BapaFormula.BapaFormula freeFormula = new BapaImpl(
                 new BapaFormulaOperation(BapaFormulaOperation.NatRelation.And,
                     assumptions.Select(assumption => assumption.ToBoundBapaFormula(_identifiers)).Concat(quorumAssumption).ToArray()),
                 new BapaFormulaOperation(BapaFormulaOperation.NatRelation.And,
-                    conjectures.Select(assumption => assumption.ToBoundBapaFormula(_identifiers)).ToArray()));
+                    conjectures.Select(conjecture => conjecture.ToBoundBapaFormula(_identifiers)).ToArray()));
 
             return constants.Aggregate(freeFormula,
                 (current, identifier) =>
