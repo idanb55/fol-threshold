@@ -2,10 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using FolThresholdParser.BapaFormula;
+using FolThresholdParser.FolThresholdEntities;
 using FolThresholdParser.Parser;
 using FolThresholdParser.Utils;
 
-namespace FolThresholdParser.FolThresholdEntities
+namespace FolThresholdParser.FolSyntax
 {
     public abstract class SetExpression : IExpression
     {
@@ -64,8 +65,6 @@ namespace FolThresholdParser.FolThresholdEntities
                 : new SetOpExpression(leftExpr, tokens[cursor].Type, Parse(tokens.Skip(cursor + 1)));
         }
 
-        public abstract BapaSetExpression ToBapaSetExpression();
-
         public abstract string ToIvyAxiom();
     }
 
@@ -79,11 +78,6 @@ namespace FolThresholdParser.FolThresholdEntities
         }
 
         public override IEnumerable<string> VariablesToBind => new string[0];
-
-        public override BapaSetExpression ToBapaSetExpression()
-        {
-            return new BapaSetVar(Name);
-        }
 
         public override string ToIvyAxiom()
         {
@@ -106,11 +100,6 @@ namespace FolThresholdParser.FolThresholdEntities
 
         public override IEnumerable<string> VariablesToBind => new[] { FullName };
 
-        public override BapaSetExpression ToBapaSetExpression()
-        {
-            return new BapaSetVar(FullName);
-        }
-
         public override string ToIvyAxiom()
         {
             return $"member_{Name}(N, {FullName})";
@@ -132,6 +121,11 @@ namespace FolThresholdParser.FolThresholdEntities
             Expr2 = expr2;
         }
 
+        public static SetExpression Aggregate(SyntaxKind setOperation, SetExpression[] expressions)
+        {
+            return expressions.Aggregate((expr1, expr2) => new SetOpExpression(expr1, setOperation, expr2));
+        }
+
         private static BapaSetOperation.SetRelation GetOperation(SyntaxKind op)
         {
             switch (op)
@@ -143,12 +137,6 @@ namespace FolThresholdParser.FolThresholdEntities
                 default:
                     throw new Exception("Illegal Natural operation");
             }
-        }
-
-        public override BapaSetExpression ToBapaSetExpression()
-        {
-            return new BapaSetOperation(GetOperation(Op),
-                new[] {Expr1.ToBapaSetExpression(), Expr2.ToBapaSetExpression()});
         }
 
         public override string ToIvyAxiom()
@@ -167,11 +155,6 @@ namespace FolThresholdParser.FolThresholdEntities
         }
 
         public override IEnumerable<string> VariablesToBind => Expr.VariablesToBind;
-
-        public override BapaSetExpression ToBapaSetExpression()
-        {
-            return new BapaSetComplement(Expr.ToBapaSetExpression());
-        }
 
         public override string ToIvyAxiom()
         {

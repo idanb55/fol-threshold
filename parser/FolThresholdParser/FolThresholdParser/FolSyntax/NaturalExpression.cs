@@ -2,10 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using FolThresholdParser.BapaFormula;
+using FolThresholdParser.FolThresholdEntities;
 using FolThresholdParser.Parser;
 using FolThresholdParser.Utils;
 
-namespace FolThresholdParser.FolThresholdEntities
+namespace FolThresholdParser.FolSyntax
 {
     public abstract class NaturalExpression : IExpression
     {
@@ -49,8 +50,6 @@ namespace FolThresholdParser.FolThresholdEntities
                 ? leftExpr
                 : new NatOpExpression(leftExpr, tokens[cursor].Type, Parse(tokens.Skip(cursor + 1)));
         }
-
-        public abstract BapaNatExpression ToBapaNatExpression();
     }
 
     public class NatConstExpression : NaturalExpression
@@ -68,11 +67,6 @@ namespace FolThresholdParser.FolThresholdEntities
             {
                 yield break;
             }
-        }
-
-        public override BapaNatExpression ToBapaNatExpression()
-        {
-            return new BapaNatConst(Constant);
         }
 
         public override string ToString()
@@ -99,11 +93,6 @@ namespace FolThresholdParser.FolThresholdEntities
             }
         }
 
-        public override BapaNatExpression ToBapaNatExpression()
-        {
-            return new BapaNatVar(Name);
-        }
-
         public override string ToString()
         {
             return Name;
@@ -123,14 +112,26 @@ namespace FolThresholdParser.FolThresholdEntities
 
         public override IEnumerable<string> VariablesToBind => Expr.VariablesToBind;
 
-        public override BapaNatExpression ToBapaNatExpression()
-        {
-            return new BapaNatConstantMul(Constant.Constant, Expr.ToBapaNatExpression());
-        }
-
         public override string ToString()
         {
             return Expr is NatVarExpression ? $"{Constant}{Expr}" : $"{Constant}({Expr})";
+        }
+    }
+
+    public class NatCardExpression : NaturalExpression
+    {
+        public SetExpression SetExpr { get; protected set; }
+
+        public NatCardExpression(SetExpression setExpr)
+        {
+            SetExpr = setExpr;
+        }
+
+        public override IEnumerable<string> VariablesToBind => SetExpr.VariablesToBind;
+
+        public override string ToString()
+        {
+            return $"|{SetExpr}|";
         }
     }
 
@@ -149,6 +150,11 @@ namespace FolThresholdParser.FolThresholdEntities
             Expr2 = expr2;
         }
 
+        public static NaturalExpression Aggregate(SyntaxKind setOperation, NaturalExpression[] expressions)
+        {
+            return expressions.Aggregate((expr1, expr2) => new NatOpExpression(expr1, setOperation, expr2));
+        }
+
         private static BapaNatOperation.NatRelation GetOperation(SyntaxKind op)
         {
             switch (op)
@@ -160,11 +166,6 @@ namespace FolThresholdParser.FolThresholdEntities
                 default:
                     throw new Exception("Illegal Natural operation");
             }
-        }
-
-        public override BapaNatExpression ToBapaNatExpression()
-        {
-            return new BapaNatOperation(GetOperation(Op), Expr1.ToBapaNatExpression(), Expr2.ToBapaNatExpression());
         }
 
         public override string ToString()

@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
-using System.Text.RegularExpressions;
 using FolThresholdParser.BapaFormula;
 using FolThresholdParser.Parser;
 using FolThresholdParser.Utils;
 
-namespace FolThresholdParser.FolThresholdEntities
+namespace FolThresholdParser.FolSyntax
 {
     public abstract class Formula
     {
@@ -46,33 +44,6 @@ namespace FolThresholdParser.FolThresholdEntities
             }
             return res.OrderBy(pair => pair.Value);
         }
-
-        public IEnumerable<BapaFormula.BapaFormula> GetVariableAssumptions(Dictionary<string, Identifier> identifiers)
-        {
-            foreach (var variable in VariablesToBind)
-            {
-                int index;
-                var quorum = Identifier.GetIdentifier(identifiers, variable, out index) as Quorum;
-                if (quorum == null) throw new Exception("Non-quorum variables are not supported");
-                yield return quorum.GetQuorumAssumption(index);
-            }
-        }
-
-        public BapaFormula.BapaFormula ToBoundBapaFormula(Dictionary<string, Identifier> identifiers)
-        {
-            var formula = ToBapaFormula();
-            var quorumAssumption = new BapaFormulaOperation(BapaFormulaOperation.NatRelation.And, GetVariableAssumptions(identifiers).ToArray());
-            formula = new BapaImpl(quorumAssumption, formula);
-
-            foreach (var bind in GetVariablesToBind(identifiers))
-            {
-                formula = new BapaBind(bind.Value, bind.Key, formula);
-            }
-
-            return formula;
-        }
-
-        public abstract BapaFormula.BapaFormula ToBapaFormula();
 
         public string ToBoundIvyAxiom(Dictionary<string, Identifier> identifiers)
         {
@@ -151,11 +122,6 @@ namespace FolThresholdParser.FolThresholdEntities
 
         public override IEnumerable<string> VariablesToBind => Expr1.VariablesToBind.Concat(Expr2.VariablesToBind);
 
-        public override BapaFormula.BapaFormula ToBapaFormula()
-        {
-            return new BapaNatRelation(ToNatRelation(), Expr1.ToBapaNatExpression(), Expr2.ToBapaNatExpression());
-        }
-
         public override string ToIvyAxiom()
         {
             throw new Exception("Naturals cannot be a part of Ivy axiom");
@@ -174,11 +140,6 @@ namespace FolThresholdParser.FolThresholdEntities
         public static NonEmptySetFormula Parse(bool conjecture, ArrayView<Token> tokens)
         {
             return new NonEmptySetFormula(conjecture, SetExpression.Parse(tokens));
-        }
-
-        public override BapaFormula.BapaFormula ToBapaFormula()
-        {
-            return new BapaNatRelation(BapaNatRelation.NatRelation.Intneq, new BapaCard(Expr.ToBapaSetExpression()), new BapaNatConst(0));
         }
 
         public override string ToIvyAxiom()
@@ -221,11 +182,6 @@ namespace FolThresholdParser.FolThresholdEntities
         }
 
         public override IEnumerable<string> VariablesToBind => Expr1.VariablesToBind.Concat(Expr2.VariablesToBind);
-
-        public override BapaFormula.BapaFormula ToBapaFormula()
-        {
-            return new BapaSetRelation(ToSetRelation(), Expr1.ToBapaSetExpression(), Expr2.ToBapaSetExpression());
-        }
 
         public override string ToIvyAxiom()
         {

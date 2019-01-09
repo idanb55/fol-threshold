@@ -1,13 +1,14 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using FolThresholdParser.BapaFormula;
-using FolSyntax;
+using FolThresholdParser.FolSyntax;
+using FolThresholdParser.Parser;
 
 namespace FolThresholdParser.VennDiagram
 {
     public static class VennDiagramIterator
     {
-        private static IEnumerable<BapaSetExpression> ReadMask(int mask, IReadOnlyList<BapaSetExpression> variables, bool useComplement)
+        private static IEnumerable<SetExpression> ReadMask(int mask, IReadOnlyList<SetExpression> variables)
         {
             for (var j = 0; j < variables.Count; ++j)
             {
@@ -15,25 +16,15 @@ namespace FolThresholdParser.VennDiagram
                 {
                     yield return variables[j];
                 }
-                else if(useComplement)
-                    yield return new BapaSetComplement(variables[j]);
+                yield return new SetComplementExpression(variables[j]);
             }
         }
 
-        public static IEnumerable<BapaSetExpression> GetVennZonesHelper(SetVarExpression[] variables)
+        public static IEnumerable<SetExpression> GetVennZonesHelper(SetVarExpression[] variables)
         {
             for (var i = 0; i < 1 << variables.Length; ++i)
             {
-                yield return new BapaSetOperation(BapaSetOperation.SetRelation.Intersection, ReadMask(i, variables.Select(var => var.ToBapaSetExpression()).ToArray(), true).ToArray());
-            }
-        }
-
-        public static IEnumerable<BapaSetExpression> GetVennZones(SetVarExpression[] variables)
-        {
-            var basicZones = GetVennZonesHelper(variables).ToArray();
-            for (var i = 0; i < 1 << basicZones.Length; ++i)
-            {
-                yield return new BapaSetOperation(BapaSetOperation.SetRelation.Union, ReadMask(i, basicZones, false).ToArray());
+                yield return SetOpExpression.Aggregate(SyntaxKind.AndOperationToken, ReadMask(i, variables.ToArray()).ToArray());
             }
         }
     }

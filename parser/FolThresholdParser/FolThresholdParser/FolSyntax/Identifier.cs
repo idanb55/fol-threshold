@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using FolThresholdParser.BapaFormula;
+using FolThresholdParser.FolThresholdEntities;
 using FolThresholdParser.Parser;
 using FolThresholdParser.Utils;
 
-namespace FolThresholdParser.FolThresholdEntities
+namespace FolThresholdParser.FolSyntax
 {
     public class Identifier
     {
@@ -110,12 +111,12 @@ namespace FolThresholdParser.FolThresholdEntities
             return new Quorum(constant, tokens[0].Value, tokens[1].Type, NaturalExpression.Parse(tokens.Skip(2)));
         }
 
-        public BapaFormula.BapaFormula GetQuorumAssumption(int index = 0)
+        /**public BapaFormula.BapaFormula GetQuorumAssumption(int index = 0)
         {
             var name = Name;
             if (!Constant) name += index;
             BapaFormula.BapaFormula formula = new BapaNatRelation(NaturalFormula.ToNatRelation(Operation), new BapaCard(new BapaSetVar(name)), Expression.ToBapaNatExpression());
             return formula;
-        }
+        }**/
     }
 }
