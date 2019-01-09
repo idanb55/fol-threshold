@@ -60,6 +60,7 @@
     <Compile Include="Parser\Token.cs" />
     <Compile Include="Parser\Tokenizer.cs" />
     <Compile Include="Parser\TokenParser.cs" />
+    <Compile Include="VennDiagram\VennDiagramIterator.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

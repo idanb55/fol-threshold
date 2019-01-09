@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using FolThresholdParser.FolThresholdEntities;
 using FolThresholdParser.Parser;
 
 namespace FolThresholdParser
@@ -22,6 +23,15 @@ namespace FolThresholdParser
                 foreach (var ivyAxiom in system.ToIvyAxioms())
                 {
                     Console.WriteLine(ivyAxiom);
+                }
+
+                foreach (var bapaSetExpression in VennDiagram.VennDiagramIterator.GetVennZones(new []
+                {
+                    new SetVarExpression("A1"), new SetVarExpression("B1"), new SetVarExpression("C1"),
+                }))
+                {
+                    Console.WriteLine(bapaSetExpression.ToOcamlBapa());
+                    Console.Read();
                 }
             }
             catch (Exception ex)
