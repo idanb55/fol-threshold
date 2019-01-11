@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using FolThresholdParser.FolSyntax;
-using FolThresholdParser.FolThresholdEntities;
 using FolThresholdParser.Parser;
 
 namespace FolThresholdParser

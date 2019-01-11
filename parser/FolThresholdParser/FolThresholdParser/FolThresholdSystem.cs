@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using FolThresholdParser.BapaFormula;
 using FolThresholdParser.FolSyntax;
-using FolThresholdParser.FolThresholdEntities;
 using FolThresholdParser.Parser;
 
 namespace FolThresholdParser
@@ -64,7 +62,7 @@ namespace FolThresholdParser
                 else yield return $"relation member_{quorum.Name}(N:node, Q:quorum_{quorum.Name})";
             }
 
-            foreach (var formula in _formulas.Where(form => form.Conjecture))
+            foreach (var formula in _formulas) // where conjecture
             {
                 yield return formula.ToBoundIvyAxiom(_identifiers);
             }

@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using FolThresholdParser.BapaFormula;
-using FolThresholdParser.FolThresholdEntities;
 using FolThresholdParser.Parser;
 using FolThresholdParser.Utils;
 
@@ -155,14 +153,19 @@ namespace FolThresholdParser.FolSyntax
             return expressions.Aggregate((expr1, expr2) => new NatOpExpression(expr1, setOperation, expr2));
         }
 
-        private static BapaNatOperation.NatRelation GetOperation(SyntaxKind op)
+        public enum NatRelation
+        {
+            Plus, Minus
+        }
+
+        private static NatRelation GetOperation(SyntaxKind op)
         {
             switch (op)
             {
                 case SyntaxKind.PlusOperationToken:
-                    return BapaNatOperation.NatRelation.Plus;
+                    return NatRelation.Plus;
                 case SyntaxKind.MinusOperationToken:
-                    return BapaNatOperation.NatRelation.Minus;
+                    return NatRelation.Minus;
                 default:
                     throw new Exception("Illegal Natural operation");
             }

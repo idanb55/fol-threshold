@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using FolThresholdParser.BapaFormula;
-using FolThresholdParser.FolThresholdEntities;
 using FolThresholdParser.Parser;
 using FolThresholdParser.Utils;
 
@@ -58,7 +56,7 @@ namespace FolThresholdParser.FolSyntax
             throw new Exception($"Illegal variable name: {variable}");
         }
 
-        public static BapaBind.BapaBindType BapaBindType(Dictionary<string, Identifier> identifiers, string variable)
+        public static FormulaBind.BapaBindType BapaBindType(Dictionary<string, Identifier> identifiers, string variable)
         {
             var match = BoundVariableNameRegex.Match(variable);
             if (!match.Success) throw new Exception($"Illegal variable name: {variable}");
@@ -66,15 +64,15 @@ namespace FolThresholdParser.FolSyntax
             var forallName = match.Groups[2].Value;
             if (!string.IsNullOrEmpty(existsName) && !string.IsNullOrEmpty(forallName))
                 throw new Exception($"Illegal variable name: {variable}");
-            BapaBind.BapaBindType type;
+            FormulaBind.BapaBindType type;
             if (!string.IsNullOrEmpty(existsName) && identifiers[existsName] is Natural)
-                type = BapaBind.BapaBindType.Existsnat;
+                type = FormulaBind.BapaBindType.Existsnat;
             else if (!string.IsNullOrEmpty(existsName) && identifiers[existsName] is Quorum)
-                type = BapaBind.BapaBindType.Existsset;
+                type = FormulaBind.BapaBindType.Existsset;
             else if (!string.IsNullOrEmpty(forallName) && identifiers[forallName.ToLower()] is Natural)
-                type = BapaBind.BapaBindType.Forallnat;
+                type = FormulaBind.BapaBindType.Forallnat;
             else if (!string.IsNullOrEmpty(forallName) && identifiers[forallName.ToLower()] is Quorum)
-                type = BapaBind.BapaBindType.Forallset;
+                type = FormulaBind.BapaBindType.Forallset;
             else
                 throw new Exception($"Illegal variable name: {variable}");
             return type;

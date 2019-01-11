@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using FolThresholdParser.BapaFormula;
-using FolThresholdParser.FolThresholdEntities;
 using FolThresholdParser.Parser;
 using FolThresholdParser.Utils;
 
@@ -126,14 +124,19 @@ namespace FolThresholdParser.FolSyntax
             return expressions.Aggregate((expr1, expr2) => new SetOpExpression(expr1, setOperation, expr2));
         }
 
-        private static BapaSetOperation.SetRelation GetOperation(SyntaxKind op)
+        enum SetRelation
+        {
+            Intersection, Union
+        }
+
+        private static SetRelation GetOperation(SyntaxKind op)
         {
             switch (op)
             {
                 case SyntaxKind.AndOperationToken:
-                    return BapaSetOperation.SetRelation.Intersection;
+                    return SetRelation.Intersection;
                 case SyntaxKind.OrOperationToken:
-                    return BapaSetOperation.SetRelation.Union;
+                    return SetRelation.Union;
                 default:
                     throw new Exception("Illegal Natural operation");
             }

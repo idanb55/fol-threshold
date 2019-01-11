@@ -44,9 +44,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BapaFormula\BapaFormula.cs" />
-    <Compile Include="BapaFormula\BapaNatExpression.cs" />
-    <Compile Include="BapaFormula\BapaSetExpression.cs" />
     <Compile Include="FolThresholdSystem.cs" />
     <Compile Include="Utils\ArrayView.cs" />
     <Compile Include="FolSyntax\Formula.cs" />
