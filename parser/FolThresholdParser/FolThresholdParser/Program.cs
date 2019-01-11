@@ -11,7 +11,7 @@ namespace FolThresholdParser
         {
             try
             {
-                var system = new FolThresholdSystem();
+                var system = new FolThresholdSystem.FolThresholdSystem();
                 foreach (var t in Tokenizer.Tokenize("..\\..\\..\\..\\..\\bosco2.folthreshold"))
                 {
                     system.ParseCode(t.ToArray());

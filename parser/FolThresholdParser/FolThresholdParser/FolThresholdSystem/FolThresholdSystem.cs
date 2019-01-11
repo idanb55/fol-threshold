@@ -4,12 +4,12 @@ using System.Linq;
 using FolThresholdParser.FolSyntax;
 using FolThresholdParser.Parser;
 
-namespace FolThresholdParser
+namespace FolThresholdParser.FolThresholdSystem
 {
     public class FolThresholdSystem
     {
         private readonly Dictionary<string, Identifier> _identifiers = new Dictionary<string, Identifier>();
-        private readonly List<Formula> _formulas = new List<Formula>();
+        private readonly List<Specification> _formulas = new List<Specification>();
 
         public void ParseCode(Token[] tokens)
         {
@@ -29,7 +29,7 @@ namespace FolThresholdParser
                     return;
                 }
 
-                var formula = Formula.Parse(tokens);
+                var formula = Specification.Parse(tokens);
                 if (formula != null)
                 {
                     _formulas.Add(formula);
@@ -64,7 +64,7 @@ namespace FolThresholdParser
 
             foreach (var formula in _formulas) // where conjecture
             {
-                yield return formula.ToBoundIvyAxiom(_identifiers);
+                yield return formula.ToString(); //.ToBoundIvyAxiom(_identifiers);
             }
         }
     }

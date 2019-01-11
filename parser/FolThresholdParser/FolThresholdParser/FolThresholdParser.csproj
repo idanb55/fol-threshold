@@ -44,11 +44,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="FolThresholdSystem.cs" />
+    <Compile Include="FolThresholdSystem\FolThresholdSystem.cs" />
+    <Compile Include="FolThresholdSystem\Specification.cs" />
     <Compile Include="Utils\ArrayView.cs" />
     <Compile Include="FolSyntax\Formula.cs" />
-    <Compile Include="FolSyntax\Identifier.cs" />
-    <Compile Include="FolSyntax\IExpression.cs" />
+    <Compile Include="FolThresholdSystem\Identifier.cs" />
     <Compile Include="FolSyntax\NaturalExpression.cs" />
     <Compile Include="Parser\Exceptions.cs" />
     <Compile Include="Program.cs" />
@@ -61,8 +61,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-    <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

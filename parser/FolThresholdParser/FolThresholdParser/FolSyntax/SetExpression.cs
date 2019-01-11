@@ -6,7 +6,7 @@ using FolThresholdParser.Utils;
 
 namespace FolThresholdParser.FolSyntax
 {
-    public abstract class SetExpression : IExpression
+    public abstract class SetExpression
     {
         public abstract IEnumerable<string> VariablesToBind { get; }
 

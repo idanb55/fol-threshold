@@ -8,21 +8,6 @@ namespace FolThresholdParser.FolSyntax
 {
     public abstract class Formula
     {
-        public static Formula Parse(ArrayView<Token> tokens)
-        {
-            switch (tokens[1].Type)
-            {
-                case SyntaxKind.NaturalKeyword:
-                    return NaturalFormula.ParseInternal(tokens.Skip(2));
-                case SyntaxKind.NonEmptyKeyword:
-                    return NonEmptySetFormula.ParseInternal(tokens.Skip(2));
-                case SyntaxKind.RelationKeyword:
-                    return SetRelationFormula.ParseInternal(tokens.Skip(2));
-                default:
-                    return null;
-            }
-        }
-
         public abstract IEnumerable<string> VariablesToBind { get; }
 
         public IEnumerable<KeyValuePair<string, FormulaBind.BapaBindType>> GetVariablesToBind(Dictionary<string, Identifier> identifiers)
@@ -159,45 +144,23 @@ namespace FolThresholdParser.FolSyntax
         }
     }
 
-    public class NonEmptySetFormula : Formula
-    {
-        protected SetExpression Expr;
-
-        public NonEmptySetFormula(SetExpression expr)
-        {
-            Expr = expr;
-        }
-
-        internal static NonEmptySetFormula ParseInternal(ArrayView<Token> tokens)
-        {
-            return new NonEmptySetFormula(SetExpression.Parse(tokens));
-        }
-
-        public override string ToIvyAxiom()
-        {
-            return "exists N:node. " + Expr.ToIvyAxiom();
-        }
-
-        public override IEnumerable<string> VariablesToBind => Expr.VariablesToBind;
-    }
-
-    public class SetRelationFormula : Formula
+    public class SetFormula : Formula
     {
         protected SetExpression Expr1, Expr2;
         protected SyntaxKind ComparisonOp;
 
-        public SetRelationFormula(SetExpression expr1, SyntaxKind comparisonOp, SetExpression expr2)
+        public SetFormula(SetExpression expr1, SyntaxKind comparisonOp, SetExpression expr2)
         {
             Expr1 = expr1;
             Expr2 = expr2;
             ComparisonOp = comparisonOp;
         }
 
-        internal static SetRelationFormula ParseInternal(ArrayView<Token> tokens)
+        internal static SetFormula ParseInternal(ArrayView<Token> tokens)
         {
             var operatorIndex = tokens.IndexOfFirstSyntaxKind(SyntaxGeneralType.ComparisonOperators);
 
-            return new SetRelationFormula(SetExpression.Parse(tokens.Take(operatorIndex)),
+            return new SetFormula(SetExpression.Parse(tokens.Take(operatorIndex)),
                 tokens[operatorIndex].Type, SetExpression.Parse(tokens.Skip(operatorIndex + 1)));
         }
 
