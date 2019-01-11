@@ -20,24 +20,41 @@ namespace FolThresholdParser.Parser
             throw new ParserTokenException("Illegal parenthesis hierarchy", tokens[0]);
         }
 
-        public static int IndexOfFirstSyntaxKind(this ArrayView<Token> tokens, SyntaxGeneralType kind, bool suppressFailure = false)
+        private static int IndexOfFirstSyntaxKindHelper(this ArrayView<Token> tokens, Func<Token, bool> predicate)
         {
             var counter = 0;
             for (var index = 0; index < tokens.Length; ++index)
             {
                 if (tokens[index].Type == SyntaxKind.OpenParenthesisToken) ++counter;
                 if (tokens[index].Type == SyntaxKind.CloseParenthesisToken) --counter;
-                if (counter == 0 && tokens[index].GeneralType == kind) return index;
+                if (counter == 0 && predicate(tokens[index])) return index;
             }
 
-            if (suppressFailure) return -1;
-            throw new ParserTokenException($"Missing literal of type {kind}", tokens[0]);
+            return -1;
         }
 
+        public static int IndexOfFirstSyntaxKind(this ArrayView<Token> tokens, SyntaxKind kind)
+        {
+            int res = IndexOfFirstSyntaxKindHelper(tokens, token => token.Type == kind);
+            if (res < 0) throw new ParserTokenException($"Missing literal of type {kind}", tokens[0]);
+            return res;
+        }
+
+        public static int IndexOfFirstSyntaxKindNoThrow(this ArrayView<Token> tokens, SyntaxKind kind)
+        {
+            return IndexOfFirstSyntaxKindHelper(tokens, token => token.Type == kind);
+        }
+
+        public static int IndexOfFirstSyntaxKind(this ArrayView<Token> tokens, SyntaxGeneralType kind)
+        {
+            int res = IndexOfFirstSyntaxKindHelper(tokens, token => token.GeneralType == kind);
+            if (res < 0) throw new ParserTokenException($"Missing literal of type {kind}", tokens[0]);
+            return res;
+        }
 
         public static int IndexOfFirstSyntaxKindNoThrow(this ArrayView<Token> tokens, SyntaxGeneralType kind)
         {
-            return IndexOfFirstSyntaxKind(tokens, kind, true);
+            return IndexOfFirstSyntaxKindHelper(tokens, token => token.GeneralType == kind);
         }
     }
 }

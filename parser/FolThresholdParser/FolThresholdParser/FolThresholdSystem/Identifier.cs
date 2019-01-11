@@ -55,28 +55,6 @@ namespace FolThresholdParser.FolSyntax
                 return identifiers[forallName.ToLower()];
             throw new Exception($"Illegal variable name: {variable}");
         }
-
-        public static FormulaBind.BapaBindType BapaBindType(Dictionary<string, Identifier> identifiers, string variable)
-        {
-            var match = BoundVariableNameRegex.Match(variable);
-            if (!match.Success) throw new Exception($"Illegal variable name: {variable}");
-            var existsName = match.Groups[1].Value;
-            var forallName = match.Groups[2].Value;
-            if (!string.IsNullOrEmpty(existsName) && !string.IsNullOrEmpty(forallName))
-                throw new Exception($"Illegal variable name: {variable}");
-            FormulaBind.BapaBindType type;
-            if (!string.IsNullOrEmpty(existsName) && identifiers[existsName] is Natural)
-                type = FormulaBind.BapaBindType.Existsnat;
-            else if (!string.IsNullOrEmpty(existsName) && identifiers[existsName] is Quorum)
-                type = FormulaBind.BapaBindType.Existsset;
-            else if (!string.IsNullOrEmpty(forallName) && identifiers[forallName.ToLower()] is Natural)
-                type = FormulaBind.BapaBindType.Forallnat;
-            else if (!string.IsNullOrEmpty(forallName) && identifiers[forallName.ToLower()] is Quorum)
-                type = FormulaBind.BapaBindType.Forallset;
-            else
-                throw new Exception($"Illegal variable name: {variable}");
-            return type;
-        }
     }
 
     public class Natural : Identifier

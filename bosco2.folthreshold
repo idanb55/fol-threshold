@@ -1,5 +1,5 @@
-conjecture set not (B1 & B2 & ~f <= emptyset)
-conjecture set c1 <= A1 & B1 & ~f
+conjecture set forall B:b,B:d. not (b & d & ~f <= emptyset)
+conjecture set forall A:a,B:b. exists C:c. c <= a & b & ~f
 
 constant natural n
 constant natural t

@@ -52,11 +52,17 @@ namespace FolThresholdParser.Parser
             {SyntaxKind.SetKeyword, "set"},
             {SyntaxKind.NotKeyword, "not"},
             {SyntaxKind.AndKeyword, "and"},
-            {SyntaxKind.OrKeyword, "Or"},
+            {SyntaxKind.OrKeyword, "or"},
+            {SyntaxKind.ForallSetKeyword, "forall"},
+            {SyntaxKind.ExistsSetKeyword, "exists"},
 
             // operation
             { SyntaxKind.OpenParenthesisToken,         ("(")         },
             { SyntaxKind.CloseParenthesisToken,     (")")         },
+
+            { SyntaxKind.DotToken,          (".")        },
+            { SyntaxKind.CommaToken,          (",")        },
+            { SyntaxKind.ColonToken,          (":")        },
 
             { SyntaxKind.PlusOperationToken,          ("+")        },
             { SyntaxKind.MinusOperationToken,         ("-")        },

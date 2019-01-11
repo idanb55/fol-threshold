@@ -41,6 +41,10 @@ namespace FolThresholdParser.Parser
         LiteralNumberToken,
         WhitespaceToken,
 
+        DotToken,
+        CommaToken,
+        ColonToken,
+
         // identifier keyword
         ConstantKeyword,
         NaturalKeyword,
@@ -53,6 +57,9 @@ namespace FolThresholdParser.Parser
         NotKeyword,
         AndKeyword,
         OrKeyword,
+
+        ForallSetKeyword,
+        ExistsSetKeyword,
 
         // Literal Values
         //EmptySetKeyword,

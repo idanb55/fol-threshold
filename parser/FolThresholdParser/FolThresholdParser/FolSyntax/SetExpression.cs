@@ -24,13 +24,7 @@ namespace FolThresholdParser.FolSyntax
             {
                 var varName = tokens[cursor].Value;
                 ++cursor;
-                if (cursor < tokens.Length && tokens[cursor].Type == SyntaxKind.LiteralNumberToken)
-                {
-                    leftExpr = new SetVarInstanceExpression(varName, int.Parse(tokens[cursor].Value));
-                    ++cursor;
-                }
-                else
-                    leftExpr = new SetVarExpression(varName);
+                leftExpr = new SetVarExpression(varName);
             }
             else if (tokens[cursor].Type == SyntaxKind.ComplementOperationToken)
             {
@@ -45,13 +39,7 @@ namespace FolThresholdParser.FolSyntax
                 {
                     var varName = tokens[cursor].Value;
                     ++cursor;
-                    if (cursor < tokens.Length && tokens[cursor].Type == SyntaxKind.LiteralNumberToken)
-                    {
-                        leftExpr = new SetComplementExpression(new SetVarInstanceExpression(varName, int.Parse(tokens[cursor].Value)));
-                        ++cursor;
-                    }
-                    else
-                        leftExpr = new SetComplementExpression(new SetVarExpression(varName));
+                    leftExpr = new SetComplementExpression(new SetVarExpression(varName));
                 }
             }
 
