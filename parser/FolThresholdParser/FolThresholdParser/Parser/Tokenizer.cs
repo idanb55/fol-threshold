@@ -41,15 +41,18 @@ namespace FolThresholdParser.Parser
         public static readonly Dictionary<SyntaxKind, string> Keywords = new Dictionary<SyntaxKind, string>
         {
             // keywords
-            {SyntaxKind.EmptySetKeyword, "emptyset"},
-            {SyntaxKind.GlobalSetKeyword, "globalset"},
+            //{SyntaxKind.EmptySetKeyword, "emptyset"},
+            //{SyntaxKind.GlobalSetKeyword, "globalset"},
             {SyntaxKind.ConstantKeyword, "constant"},
             {SyntaxKind.NaturalKeyword, "natural"},
             {SyntaxKind.QuorumKeyword, "quorum"},
             {SyntaxKind.AxiomKeyword, "axiom"},
             {SyntaxKind.ConjectureKeyword, "conjecture"},
             {SyntaxKind.NonEmptyKeyword, "nonempty"},
-            {SyntaxKind.RelationKeyword, "relation"},
+            {SyntaxKind.SetKeyword, "set"},
+            {SyntaxKind.NotKeyword, "not"},
+            {SyntaxKind.AndKeyword, "and"},
+            {SyntaxKind.OrKeyword, "Or"},
 
             // operation
             { SyntaxKind.OpenParenthesisToken,         ("(")         },

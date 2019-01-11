@@ -25,11 +25,11 @@ namespace FolThresholdParser.FolThresholdSystem
             switch (tokens[1].Type)
             {
                 case SyntaxKind.NaturalKeyword:
-                    return new NaturalSpecification(conjecture, tokens.Skip(2));
+                    return new NaturalSpecification(conjecture, tokens);
                 //case SyntaxKind.NonEmptyKeyword:
                     //return NonEmptySetFormula.ParseInternal(conjecture, tokens.Skip(2));
-                case SyntaxKind.RelationKeyword:
-                    return new SetSpecification(conjecture, tokens.Skip(2));
+                case SyntaxKind.SetKeyword:
+                    return new SetSpecification(conjecture, tokens);
                 default:
                     return null;
             }
@@ -38,21 +38,21 @@ namespace FolThresholdParser.FolThresholdSystem
 
     public class NaturalSpecification : Specification
     {
-        public readonly NaturalFormula Formula;
+        public readonly Formula Formula;
 
         public NaturalSpecification(bool conjecture, ArrayView<Token> tokens) : base(conjecture)
         {
-            Formula = NaturalFormula.ParseInternal(tokens.Skip(2));
+            Formula = NaturalFormula.Parse(tokens.Skip(2));
         }
     }
 
     public class SetSpecification : Specification
     {
-        public readonly SetFormula Formula;
+        public readonly Formula Formula;
 
         public SetSpecification(bool conjecture, ArrayView<Token> tokens) : base(conjecture)
         {
-            Formula = SetFormula.ParseInternal(tokens.Skip(2));
+            Formula = SetFormula.Parse(tokens.Skip(2));
         }
     }
 }

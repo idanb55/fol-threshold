@@ -48,11 +48,15 @@ namespace FolThresholdParser.Parser
         AxiomKeyword,
         ConjectureKeyword,
         NonEmptyKeyword,
-        RelationKeyword,
+        SetKeyword,
+
+        NotKeyword,
+        AndKeyword,
+        OrKeyword,
 
         // Literal Values
-        EmptySetKeyword,
-        GlobalSetKeyword,
+        //EmptySetKeyword,
+        //GlobalSetKeyword,
 
         OpenParenthesisToken,
         CloseParenthesisToken        
@@ -113,9 +117,12 @@ namespace FolThresholdParser.Parser
                 case SyntaxKind.AxiomKeyword:
                 case SyntaxKind.ConjectureKeyword:
                 case SyntaxKind.NonEmptyKeyword:
-                case SyntaxKind.RelationKeyword:
-                case SyntaxKind.EmptySetKeyword:
-                case SyntaxKind.GlobalSetKeyword:
+                case SyntaxKind.SetKeyword:
+                //case SyntaxKind.EmptySetKeyword:
+                //case SyntaxKind.GlobalSetKeyword:
+                case SyntaxKind.NotKeyword:
+                case SyntaxKind.AndKeyword:
+                case SyntaxKind.OrKeyword:
                     return SyntaxGeneralType.Keyword;
                 case SyntaxKind.OpenParenthesisToken:
                 case SyntaxKind.CloseParenthesisToken:

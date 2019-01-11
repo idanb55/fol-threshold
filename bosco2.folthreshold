@@ -1,3 +1,6 @@
+conjecture set not (B1 & B2 & ~f <= emptyset)
+conjecture set c1 <= A1 & B1 & ~f
+
 constant natural n
 constant natural t
 
@@ -9,19 +12,16 @@ quorum A >= 2n - 2t
 quorum B > n + 3t
 quorum C > n - t
 
-conjecture nonempty B1 & B2 & ~f
-conjecture relation c1 <= A1 & B1 & ~f
-conjecture nonempty B1 & C1 & ~f
-conjecture nonempty B1 & ~f
-conjecture nonempty C1 & ~f
-conjecture relation a1 <= ~f
-
-conjecture nonempty a1 & ~f
+#conjecture set nonempty B1 & C1 & ~f
+#conjecture set nonempty B1 & ~f
+#conjecture set nonempty C1 & ~f
+#conjecture set relation a1 <= ~f
+#conjecture set nonempty a1 & ~f
 
 # Weak 
 axiom natural n > 5t
-conjecture relation b1 <= A & ~f
+conjecture set b1 <= A & ~f
 
 # Hard
 axiom natural n > 7t
-conjecture relation b1 <= A
+conjecture set b1 <= A

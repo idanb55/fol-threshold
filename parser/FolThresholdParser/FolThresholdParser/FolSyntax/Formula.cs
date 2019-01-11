@@ -10,41 +10,103 @@ namespace FolThresholdParser.FolSyntax
     {
         public abstract IEnumerable<string> VariablesToBind { get; }
 
-        public IEnumerable<KeyValuePair<string, FormulaBind.BapaBindType>> GetVariablesToBind(Dictionary<string, Identifier> identifiers)
+        public enum FormulaType
         {
-            var res = new Dictionary<string, FormulaBind.BapaBindType>();
-            foreach (var variable in VariablesToBind)
-            {
-                var type = Identifier.BapaBindType(identifiers, variable);
-                res[variable] = type;
-            }
-            return res.OrderBy(pair => pair.Value);
+            Natural, Set
         }
 
-        public string ToBoundIvyAxiom(Dictionary<string, Identifier> identifiers)
+        public static Formula Parse(ArrayView<Token> tokens, FormulaType type)
         {
-            var formula = ToIvyAxiom();
-            foreach (var bind in GetVariablesToBind(identifiers))
+            if (tokens[0].Type == SyntaxKind.NotKeyword)
             {
-                var varName = bind.Key;
-                var quorumName = varName.TrimEnd('0', '1', '2', '3', '4', '5', '6', '7', '8', '9');
-                switch (bind.Value)
+                return new FormulaNot(Parse(tokens.Skip(1), type));
+            }
+
+            if (tokens[0].Type == SyntaxKind.OpenParenthesisToken)
+            {
+                var indexOfCloseParenthesis = tokens.IndexOfCloseParenthesis();
+                if(indexOfCloseParenthesis < 0)
+                    throw new Exception("Illegal formula");
+                if (indexOfCloseParenthesis + 1 != tokens.Length - 1)
+                    throw new Exception("Illegal formula");
+
+                return Parse(tokens.Skip(1).Take(indexOfCloseParenthesis), type);
+            }
+
+            var indexOfOperation = tokens.IndexOfFirstSyntaxKindNoThrow(SyntaxGeneralType.ComparisonOperators);
+            if (indexOfOperation > 0)
+            {
+                switch (type)
                 {
-                    case FormulaBind.BapaBindType.Forallset:
-                        formula = $"forall {varName}:quorum_{quorumName}. {formula}";
-                        break;
-                    case FormulaBind.BapaBindType.Existsset:
-                        formula = $"exsits {varName}:quorum_{quorumName}. {formula}";
-                        break;
+                    case FormulaType.Natural:
+                        return new NaturalFormula(NaturalExpression.Parse(tokens.Take(indexOfOperation)),
+                            tokens[indexOfOperation].Type,
+                            NaturalExpression.Parse(tokens.Skip(indexOfOperation + 1)));
+                    case FormulaType.Set:
+                        return new SetFormula(SetExpression.Parse(tokens.Take(indexOfOperation)),
+                            tokens[indexOfOperation].Type,
+                            SetExpression.Parse(tokens.Skip(indexOfOperation + 1)));
                     default:
-                        throw new ArgumentOutOfRangeException();
+                        throw new ArgumentOutOfRangeException(nameof(type), type, null);
                 }
             }
 
-            return formula;
+            indexOfOperation = tokens.IndexOfFirstSyntaxKindNoThrow(SyntaxGeneralType.Keyword);
+            return new FormulaOperation(Parse(tokens.Take(indexOfOperation), type),
+                tokens[indexOfOperation].Type,
+                Parse(tokens.Skip(indexOfOperation + 1), type));
+        }
+    }
+
+    public class FormulaOperation : Formula
+    {
+        public Formula Form1 { get; protected set; }
+        public SyntaxKind Op { get; protected set; }
+        public Formula Form2 { get; protected set; }
+
+        public override IEnumerable<string> VariablesToBind => Form1.VariablesToBind.Concat(Form2.VariablesToBind);
+
+        public FormulaOperation(Formula form1, SyntaxKind natOperation, Formula form2)
+        {
+            Form1 = form1;
+            Op = natOperation;
+            Form2 = form2;
         }
 
-        public abstract string ToIvyAxiom();
+        public enum FormulaOp
+        {
+            And, Or
+        }
+
+        private static FormulaOp GetOperation(SyntaxKind op)
+        {
+            switch (op)
+            {
+                case SyntaxKind.AndKeyword:
+                    return FormulaOp.And;
+                case SyntaxKind.OrKeyword:
+                    return FormulaOp.Or;
+                default:
+                    throw new Exception("Illegal Natural operation");
+            }
+        }
+
+        public override string ToString()
+        {
+            return $"{Form1} {Tokenizer.Keywords[Op]} {Form2}";
+        }
+    }
+
+    public class FormulaNot : Formula
+    {
+        private readonly Formula _inner;
+
+        public FormulaNot(Formula inner)
+        {
+            _inner = inner;
+        }
+
+        public override IEnumerable<string> VariablesToBind => _inner.VariablesToBind;
     }
 
     public class FormulaBind : Formula
@@ -70,11 +132,6 @@ namespace FolThresholdParser.FolSyntax
 
         public override IEnumerable<string> VariablesToBind =>
             _inner.VariablesToBind.Where(variable => !string.Equals(variable, _varName));
-
-        public override string ToIvyAxiom()
-        {
-            throw new NotImplementedException();
-        }
     }
 
     public class NaturalFormula : Formula
@@ -89,12 +146,9 @@ namespace FolThresholdParser.FolSyntax
             ComparisonOp = comparisonOp;
         }
 
-        internal static NaturalFormula ParseInternal(ArrayView<Token> tokens)
+        public static Formula Parse(ArrayView<Token> tokens)
         {
-            var operatorIndex = tokens.IndexOfFirstSyntaxKind(SyntaxGeneralType.ComparisonOperators);
-
-            return new NaturalFormula(NaturalExpression.Parse(tokens.Take(operatorIndex)),
-                tokens[operatorIndex].Type, NaturalExpression.Parse(tokens.Skip(operatorIndex + 1)));
+            return Parse(tokens, FormulaType.Natural);
         }
 
         public enum NatRelation
@@ -137,11 +191,6 @@ namespace FolThresholdParser.FolSyntax
         }
 
         public override IEnumerable<string> VariablesToBind => Expr1.VariablesToBind.Concat(Expr2.VariablesToBind);
-
-        public override string ToIvyAxiom()
-        {
-            throw new Exception("Naturals cannot be a part of Ivy axiom");
-        }
     }
 
     public class SetFormula : Formula
@@ -156,12 +205,9 @@ namespace FolThresholdParser.FolSyntax
             ComparisonOp = comparisonOp;
         }
 
-        internal static SetFormula ParseInternal(ArrayView<Token> tokens)
+        public static Formula Parse(ArrayView<Token> tokens)
         {
-            var operatorIndex = tokens.IndexOfFirstSyntaxKind(SyntaxGeneralType.ComparisonOperators);
-
-            return new SetFormula(SetExpression.Parse(tokens.Take(operatorIndex)),
-                tokens[operatorIndex].Type, SetExpression.Parse(tokens.Skip(operatorIndex + 1)));
+            return Parse(tokens, FormulaType.Set);
         }
 
         public enum SetRelation
@@ -176,16 +222,13 @@ namespace FolThresholdParser.FolSyntax
             {
                 case SyntaxKind.LeqThanToken:
                     return SetRelation.Subseteq;
+                case SyntaxKind.LessThanToken:
+                    return SetRelation.Subset;
                 default:
                     throw new Exception($"Illegal syntax kind {ComparisonOp}");
             }
         }
 
         public override IEnumerable<string> VariablesToBind => Expr1.VariablesToBind.Concat(Expr2.VariablesToBind);
-
-        public override string ToIvyAxiom()
-        {
-            return "forall N:node. " + Expr1.ToIvyAxiom() + " -> " + Expr2.ToIvyAxiom();
-        }
     }
 }

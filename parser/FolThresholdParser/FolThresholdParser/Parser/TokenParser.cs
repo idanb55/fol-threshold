@@ -20,13 +20,24 @@ namespace FolThresholdParser.Parser
             throw new ParserTokenException("Illegal parenthesis hierarchy", tokens[0]);
         }
 
-        public static int IndexOfFirstSyntaxKind(this ArrayView<Token> tokens, SyntaxGeneralType kind)
+        public static int IndexOfFirstSyntaxKind(this ArrayView<Token> tokens, SyntaxGeneralType kind, bool suppressFailure = false)
         {
+            var counter = 0;
             for (var index = 0; index < tokens.Length; ++index)
             {
-                if (tokens[index].GeneralType == kind) return index;
+                if (tokens[index].Type == SyntaxKind.OpenParenthesisToken) ++counter;
+                if (tokens[index].Type == SyntaxKind.CloseParenthesisToken) --counter;
+                if (counter == 0 && tokens[index].GeneralType == kind) return index;
             }
+
+            if (suppressFailure) return -1;
             throw new ParserTokenException($"Missing literal of type {kind}", tokens[0]);
+        }
+
+
+        public static int IndexOfFirstSyntaxKindNoThrow(this ArrayView<Token> tokens, SyntaxGeneralType kind)
+        {
+            return IndexOfFirstSyntaxKind(tokens, kind, true);
         }
     }
 }
