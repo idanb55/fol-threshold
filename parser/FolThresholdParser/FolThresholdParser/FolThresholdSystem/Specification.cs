@@ -34,6 +34,8 @@ namespace FolThresholdParser.FolThresholdSystem
                     return null;
             }
         }
+
+        public abstract string ToBoundIvyAxiom(Dictionary<string, Identifier> identifiers);
     }
 
     public class NaturalSpecification : Specification
@@ -44,6 +46,11 @@ namespace FolThresholdParser.FolThresholdSystem
         {
             Formula = NaturalFormula.Parse(tokens.Skip(2));
         }
+
+        public override string ToBoundIvyAxiom(Dictionary<string, Identifier> identifiers)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public class SetSpecification : Specification
@@ -53,6 +60,11 @@ namespace FolThresholdParser.FolThresholdSystem
         public SetSpecification(bool conjecture, ArrayView<Token> tokens) : base(conjecture)
         {
             Formula = SetFormula.Parse(tokens.Skip(2));
+        }
+
+        public override string ToBoundIvyAxiom(Dictionary<string, Identifier> identifiers)
+        {
+            return Formula.ToBoundIvyAxiomActual(identifiers);
         }
     }
 }

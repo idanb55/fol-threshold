@@ -8,8 +8,16 @@ namespace FolThresholdParser.FolThresholdSystem
 {
     public class FolThresholdSystem
     {
+        private const string EmptysetIdentifier = "emptyset";
+
         private readonly Dictionary<string, Identifier> _identifiers = new Dictionary<string, Identifier>();
         private readonly List<Specification> _formulas = new List<Specification>();
+
+        public FolThresholdSystem()
+        {
+            _identifiers[EmptysetIdentifier] = new Quorum(true, EmptysetIdentifier, SyntaxKind.EqualToken,
+                new NatConstExpression(0));
+        }
 
         public void ParseCode(Token[] tokens)
         {
@@ -20,12 +28,12 @@ namespace FolThresholdParser.FolThresholdSystem
                 var identifier = Identifier.Parse(tokens);
                 if (identifier != null)
                 {
-                    if (_identifiers.ContainsKey(identifier.Name.ToLower()))
+                    if (_identifiers.ContainsKey(identifier.Name))
                     {
                         throw new ParserTokenException("Multiple definitions of the same identifier", tokens[0]);
                     }
 
-                    _identifiers[identifier.Name.ToLower()] = identifier;
+                    _identifiers[identifier.Name] = identifier;
                     return;
                 }
 
@@ -53,18 +61,20 @@ namespace FolThresholdParser.FolThresholdSystem
             yield return "type node";
             foreach (var quorum in _identifiers.Values.OfType<Quorum>().Where(quo => !quo.Constant))
             {
-                yield return $"type quorum_{quorum.Name} # {Tokenizer.Keywords[quorum.Operation]} {quorum.Expression}";
+                yield return $"type quorum_{quorum.Name.ToLower()} # {Tokenizer.Keywords[quorum.Operation]} {quorum.Expression}";
             }
 
             foreach (var quorum in _identifiers.Values.OfType<Quorum>())
             {
-                if (quorum.Constant) yield return $"relation {quorum.Name}(N:node)";
-                else yield return $"relation member_{quorum.Name}(N:node, Q:quorum_{quorum.Name})";
+                if (quorum.Constant) yield return $"relation member_{quorum.Name.ToLower()}(N:node)";
+                else yield return $"relation member_{quorum.Name.ToLower()}(N:node, Q:quorum_{quorum.Name.ToLower()})";
             }
 
-            foreach (var formula in _formulas) // where conjecture
+            yield return "axiom forall N:node. ~member_emptyset(N)";
+
+            foreach (var formula in _formulas.Where(spec => spec.Conjecture))
             {
-                yield return formula.ToString(); //.ToBoundIvyAxiom(_identifiers);
+                yield return "axiom " + formula.ToBoundIvyAxiom(_identifiers);
             }
         }
     }

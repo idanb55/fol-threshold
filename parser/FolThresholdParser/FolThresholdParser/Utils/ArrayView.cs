@@ -51,8 +51,11 @@ namespace FolThresholdParser.Utils
 
         private ArrayView<T> CreateView(int newOffset, int newLength)
         {
-            CheckInbound(newOffset);
-            if (newLength > 0) CheckInbound(newOffset + newLength - 1);
+            if (newLength > 0)
+            {
+                CheckInbound(newOffset + newLength - 1);
+                CheckInbound(newOffset);
+            }
 
             return new ArrayView<T>(_array, newOffset, newLength);
         }

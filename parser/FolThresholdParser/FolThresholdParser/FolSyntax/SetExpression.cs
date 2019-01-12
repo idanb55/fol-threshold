@@ -51,7 +51,7 @@ namespace FolThresholdParser.FolSyntax
                 : new SetOpExpression(leftExpr, tokens[cursor].Type, Parse(tokens.Skip(cursor + 1)));
         }
 
-        public abstract string ToIvyAxiom();
+        public abstract string ToIvyAxiom(Dictionary<string, Identifier> identifiers);
     }
 
     public class SetVarExpression : SetExpression
@@ -65,30 +65,13 @@ namespace FolThresholdParser.FolSyntax
 
         public override IEnumerable<string> VariablesToBind => new string[0];
 
-        public override string ToIvyAxiom()
+        public override string ToIvyAxiom(Dictionary<string, Identifier> identifiers)
         {
-            return $"{Name}(N)";
-        }
-    }
-
-    public class SetVarInstanceExpression : SetExpression
-    {
-        protected readonly string Name;
-        protected readonly int Index;
-
-        private string FullName => $"{Name}{Index}";
-
-        public SetVarInstanceExpression(string name, int index)
-        {
-            Name = name;
-            Index = index;
-        }
-
-        public override IEnumerable<string> VariablesToBind => new[] { FullName };
-
-        public override string ToIvyAxiom()
-        {
-            return $"member_{Name}(N, {FullName})";
+            if (!identifiers.ContainsKey(Name))
+                throw new Exception($"Unknown identifier {Name}");
+            if (identifiers[Name].Constant) return $"member_{Name.ToLower()}(N)";
+            var identifier = identifiers[Name];
+            return $"member_{identifier.Name.ToLower()}(N, {Name.ToUpper()})";
         }
     }
 
@@ -130,9 +113,9 @@ namespace FolThresholdParser.FolSyntax
             }
         }
 
-        public override string ToIvyAxiom()
+        public override string ToIvyAxiom(Dictionary<string, Identifier> identifiers)
         {
-            return $"{Expr1.ToIvyAxiom()} {Tokenizer.Keywords[Op]} {Expr2.ToIvyAxiom()})";
+            return $"{Expr1.ToIvyAxiom(identifiers)} {Tokenizer.Keywords[Op]} {Expr2.ToIvyAxiom(identifiers)}";
         }
     }
 
@@ -147,9 +130,9 @@ namespace FolThresholdParser.FolSyntax
 
         public override IEnumerable<string> VariablesToBind => Expr.VariablesToBind;
 
-        public override string ToIvyAxiom()
+        public override string ToIvyAxiom(Dictionary<string, Identifier> identifiers)
         {
-            return $"~{Expr.ToIvyAxiom()}";
+            return $"~{Expr.ToIvyAxiom(identifiers)}";
         }
     }
 }

@@ -7,7 +7,7 @@ using FolThresholdParser.Utils;
 
 namespace FolThresholdParser.FolSyntax
 {
-    public class Identifier
+    public abstract class Identifier
     {
         public bool Constant { get; protected set; }
         public string Name { get; protected set; }
