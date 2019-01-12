@@ -64,13 +64,13 @@ namespace FolThresholdParser.FolSyntax
                 Parse(tokens.Skip(indexOfOperation + 1), type));
         }
 
-        protected internal abstract IEnumerable<KeyValuePair<string, string>> BoundVariables { get; }
+        protected internal abstract IEnumerable<FormulaBind.Bind> BoundVariables { get; }
 
         private Dictionary<string, Identifier> GetIdentifiersWithBoundVariables(Dictionary<string, Identifier> identifiers)
         {
             return identifiers.Where(identifier => identifier.Value.Constant).Concat(
-                BoundVariables.Select(variable =>
-                    new KeyValuePair<string, Identifier>(variable.Key, identifiers[variable.Value]))).ToDictionary(pair => pair.Key, pair => pair.Value);
+                BoundVariables.Select(bind =>
+                    new KeyValuePair<string, Identifier>(bind.VarName, identifiers[bind.VarType]))).ToDict();
         }
 
         public string ToBoundIvyAxiomActual(Dictionary<string, Identifier> identifiers)
@@ -86,7 +86,7 @@ namespace FolThresholdParser.FolSyntax
         public abstract string ToBoundIvyAxiom(Dictionary<string, Identifier> identifiers);
         public abstract string GetSmtAssert(Dictionary<string, Identifier> identifiers);
         public abstract Formula Negate();
-        public virtual Formula Release(FormulaBind.BindType bindType) { return this; }
+        public virtual IEnumerable<FormulaBind.Bind> Release(FormulaBind.BindType bindType) { yield break; }
     }
 
     public class FormulaOperation : Formula
@@ -97,7 +97,7 @@ namespace FolThresholdParser.FolSyntax
 
         public override IEnumerable<string> VariablesToBind => Form1.VariablesToBind.Concat(Form2.VariablesToBind);
 
-        protected internal override IEnumerable<KeyValuePair<string, string>> BoundVariables =>
+        protected internal override IEnumerable<FormulaBind.Bind> BoundVariables =>
             Form1.BoundVariables.Concat(Form2.BoundVariables);
 
         public override string ToBoundIvyAxiom(Dictionary<string, Identifier> identifiers)
@@ -155,7 +155,7 @@ namespace FolThresholdParser.FolSyntax
         }
 
         public override IEnumerable<string> VariablesToBind => _inner.VariablesToBind;
-        protected internal override IEnumerable<KeyValuePair<string, string>> BoundVariables => _inner.BoundVariables;
+        protected internal override IEnumerable<FormulaBind.Bind> BoundVariables => _inner.BoundVariables;
 
         public override string ToBoundIvyAxiom(Dictionary<string, Identifier> identifiers)
         {
@@ -180,9 +180,7 @@ namespace FolThresholdParser.FolSyntax
 
     public class FormulaBind : Formula
     {
-        private readonly BindType _bindType;
-        private readonly string _varType;
-        private readonly string _varName;
+        private readonly Bind _bind;
         private readonly Formula _inner;
         private bool _released;
 
@@ -194,9 +192,7 @@ namespace FolThresholdParser.FolSyntax
 
         private FormulaBind(BindType type, string varType, string varName, Formula inner)
         {
-            _bindType = type;
-            _varType = varType;
-            _varName = varName;
+            _bind = new Bind(type, varType, varName);
             _inner = inner;
         }
 
@@ -205,21 +201,20 @@ namespace FolThresholdParser.FolSyntax
         }
 
         public override IEnumerable<string> VariablesToBind =>
-            _inner.VariablesToBind.Where(variable => !string.Equals(variable, _varName));
+            _inner.VariablesToBind.Where(variable => !string.Equals(variable, _bind.VarName));
 
-        protected internal override IEnumerable<KeyValuePair<string, string>> BoundVariables =>
-            _inner.BoundVariables.Concat(new[] {new KeyValuePair<string, string>(_varName, _varType)});
+        protected internal override IEnumerable<Bind> BoundVariables => _inner.BoundVariables.Concat(new[] {_bind});
 
         public override string ToBoundIvyAxiom(Dictionary<string, Identifier> identifiers)
         {
             if (_released) return _inner.ToBoundIvyAxiom(identifiers);
-            return $"{GetBindTypeTextual()} {_varName.ToUpper()}:quorum_{_varType.ToLower()}. {_inner.ToBoundIvyAxiom(identifiers)}";
+            return $"{GetBindTypeTextual()} {_bind.VarName.ToUpper()}:quorum_{_bind.VarType.ToLower()}. {_inner.ToBoundIvyAxiom(identifiers)}";
         }
 
         private string GetBindTypeTextual()
         {
             string bind;
-            switch (_bindType)
+            switch (_bind.BindType)
             {
                 case BindType.ExistsSet:
                     bind = "exists";
@@ -237,18 +232,18 @@ namespace FolThresholdParser.FolSyntax
         public override string GetSmtAssert(Dictionary<string, Identifier> identifiers)
         {
             if (_released) return _inner.GetSmtAssert(identifiers);
-            return $"({GetBindTypeTextual()} (({_varName} (Set Int))) {_inner.GetSmtAssert(identifiers)})"; // TODO add the quorum rule as an assumption
+            return $"({GetBindTypeTextual()} (({_bind.VarName.ToUpper()} (Set Int))) {_inner.GetSmtAssert(identifiers)})"; // TODO add the quorum rule as an assumption
         }
 
         public override Formula Negate()
         {
-            return new FormulaBind(_bindType == BindType.ForallSet ? BindType.ExistsSet : BindType.ForallSet, _varType, _varName, _inner.Negate());
+            return new FormulaBind(_bind.BindType == BindType.ForallSet ? BindType.ExistsSet : BindType.ForallSet, _bind.VarType, _bind.VarName, _inner.Negate());
         }
 
         public override string ToString()
         {
             if (_released) return _inner.ToString();
-            return $"{GetBindTypeTextual()} {_varName}:{_varType}. {_inner}";
+            return $"{GetBindTypeTextual()} {_bind.VarName}:{_bind.VarType}. {_inner}";
         }
 
         public static Formula ParseInternal(SyntaxKind bindType, ArrayView<Token> tokens, Formula inner)
@@ -264,12 +259,29 @@ namespace FolThresholdParser.FolSyntax
                 ParseInternal(bindType, tokens.Skip(4), inner));
         }
 
-        public override Formula Release(BindType bindType)
+        public override IEnumerable<Bind> Release(BindType bindType)
         {
-            if (bindType != _bindType) return this;
+            if (bindType != _bind.BindType) yield break;
             _released = true;
-            _inner.Release(bindType);
-            return this;
+            yield return _bind;
+            foreach (var bind in _inner.Release(bindType))
+            {
+                yield return bind;
+            }
+        }
+
+        public struct Bind
+        {
+            public readonly BindType BindType;
+            public readonly string VarType;
+            public readonly string VarName;
+
+            public Bind(BindType type, string varType, string varName)
+            {
+                BindType = type;
+                VarType = varType;
+                VarName = varName;
+            }
         }
     }
 
@@ -294,7 +306,7 @@ namespace FolThresholdParser.FolSyntax
             return Parse(tokens, FormulaType.Natural);
         }
 
-        protected internal override IEnumerable<KeyValuePair<string, string>> BoundVariables => new KeyValuePair<string, string>[] { };
+        protected internal override IEnumerable<FormulaBind.Bind> BoundVariables => new FormulaBind.Bind[] { };
 
         public enum NatRelation
         {
@@ -377,7 +389,7 @@ namespace FolThresholdParser.FolSyntax
             return Parse(tokens, FormulaType.Set);
         }
 
-        protected internal override IEnumerable<KeyValuePair<string, string>> BoundVariables => new KeyValuePair<string, string>[] { };
+        protected internal override IEnumerable<FormulaBind.Bind> BoundVariables => new FormulaBind.Bind[] { };
 
         public enum SetRelation
         {

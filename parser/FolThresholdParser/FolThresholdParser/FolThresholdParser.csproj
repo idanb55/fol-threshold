@@ -57,6 +57,7 @@
     <Compile Include="Parser\Token.cs" />
     <Compile Include="Parser\Tokenizer.cs" />
     <Compile Include="Parser\TokenParser.cs" />
+    <Compile Include="Utils\EnumerableUtils.cs" />
     <Compile Include="VennDiagram\VennDiagramIterator.cs" />
   </ItemGroup>
   <ItemGroup>

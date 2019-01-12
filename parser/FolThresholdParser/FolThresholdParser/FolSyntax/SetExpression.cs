@@ -80,7 +80,7 @@ namespace FolThresholdParser.FolSyntax
             if (!identifiers.ContainsKey(Name))
                 throw new Exception($"Unknown identifier {Name}");
             if (identifiers[Name].Constant) return Name;
-            return identifiers[Name].Name;
+            return Name.ToUpper();
         }
 
         public override string ToString()

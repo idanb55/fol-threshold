@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using FolThresholdParser.FolSyntax;
 using FolThresholdParser.Parser;
+using FolThresholdParser.Utils;
 
 namespace FolThresholdParser.FolThresholdSystem
 {
@@ -11,18 +12,18 @@ namespace FolThresholdParser.FolThresholdSystem
         public const string EmptySetIdentifier = "EMPTYSET";
         public const string UniversalSetIdentifier = "UNIVERSALSET";
 
-        private readonly Dictionary<string, Identifier> _identifiers = new Dictionary<string, Identifier>();
-        private readonly List<Specification> _formulas = new List<Specification>();
+        public readonly Dictionary<string, Identifier> Identifiers = new Dictionary<string, Identifier>();
+        public readonly List<Specification> Formulas = new List<Specification>();
 
         public FolThresholdSystem()
         {
-            _identifiers[EmptySetIdentifier] = new Quorum(true, EmptySetIdentifier, SyntaxKind.EqualToken,
+            Identifiers[EmptySetIdentifier] = new Quorum(true, EmptySetIdentifier, SyntaxKind.EqualToken,
                 new NatConstExpression(0));
 
-            _identifiers[UniversalSetIdentifier] = new Quorum(true, UniversalSetIdentifier, SyntaxKind.EqualToken,
+            Identifiers[UniversalSetIdentifier] = new Quorum(true, UniversalSetIdentifier, SyntaxKind.EqualToken,
                 new NatVarExpression("n"));
 
-            _formulas.Add(new Specification
+            Formulas.Add(new Specification
             {
                 Conjecture = false,
                 NaturalSpec = true,
@@ -39,19 +40,19 @@ namespace FolThresholdParser.FolThresholdSystem
                 var identifier = Identifier.Parse(tokens);
                 if (identifier != null)
                 {
-                    if (_identifiers.ContainsKey(identifier.Name))
+                    if (Identifiers.ContainsKey(identifier.Name))
                     {
                         throw new ParserTokenException("Multiple definitions of the same identifier", tokens[0]);
                     }
 
-                    _identifiers[identifier.Name] = identifier;
+                    Identifiers[identifier.Name] = identifier;
                     return;
                 }
 
                 var formula = Specification.Parse(tokens);
                 if (formula != null)
                 {
-                    _formulas.Add(formula);
+                    Formulas.Add(formula);
                     return;
                 }
 
@@ -70,74 +71,102 @@ namespace FolThresholdParser.FolThresholdSystem
         public IEnumerable<string> ToIvyAxioms()
         {
             yield return "type node";
-            foreach (var quorum in _identifiers.Values.OfType<Quorum>().Where(quo => !quo.Constant))
+            foreach (var quorum in Identifiers.Values.OfType<Quorum>().Where(quo => !quo.Constant))
             {
                 yield return $"type quorum_{quorum.Name.ToLower()} # {Tokenizer.Keywords[quorum.Operation]} {quorum.Expression}";
             }
 
-            foreach (var quorum in _identifiers.Values.OfType<Quorum>())
+            yield return string.Empty;
+
+            foreach (var quorum in Identifiers.Values.OfType<Quorum>())
             {
                 if (quorum.Constant) yield return $"relation member_{quorum.Name.ToLower()}(N:node)";
                 else yield return $"relation member_{quorum.Name.ToLower()}(N:node, Q:quorum_{quorum.Name.ToLower()})";
             }
 
-            yield return $"relation member_emptyset(N:node)";
-            yield return "axiom forall N:node. ~member_emptyset(N)";
+            yield return string.Empty;
 
-            foreach (var formula in _formulas.Where(spec => spec.Conjecture))
+            yield return $"axiom forall N:node. ~member_{EmptySetIdentifier.ToLower()}(N)";
+            yield return $"axiom forall N:node. member_{UniversalSetIdentifier.ToLower()}(N)";
+
+            yield return string.Empty;
+
+            foreach (var formula in Formulas.Where(spec => spec.Conjecture))
             {
-                yield return "axiom " + formula.ToBoundIvyAxiom(_identifiers);
+                yield return "axiom " + formula.ToBoundIvyAxiom(Identifiers);
             }
         }
 
-        public IEnumerable<string> AssertThresholdSmt2()
+        public IEnumerable<string> AssertThresholdSmt2(Specification conjecture)
         {
             yield return "(set-logic ALL_SUPPORTED)";
             yield return "(set-info :status unsat)";
 
             yield return string.Empty;
 
-            foreach (var quorum in _identifiers.Values.OfType<Natural>())
+            // natural constant
+            foreach (var quorum in Identifiers.Values.OfType<Natural>().Where(identifier => identifier.Constant))
             {
                 yield return $"(declare-fun {quorum.Name} () Int)";
             }
 
             yield return string.Empty;
 
-            foreach (var quorum in _identifiers.Values.OfType<Quorum>())
+            // quorum constant
+            foreach (var quorum in Identifiers.Values.OfType<Quorum>().Where(identifier => identifier.Constant))
             {
                 yield return $"(declare-fun {quorum.Name} () (Set Int))";
             }
 
             yield return string.Empty;
 
-            foreach (var spec in _formulas.Where(spec => !spec.Conjecture))
+            // axioms concerning constants
+            foreach (var spec in Formulas.Where(spec => !spec.Conjecture))
             {
-                yield return $"(assert {spec.Formula.GetSmtAssert(_identifiers)})";
+                yield return $"(assert {spec.Formula.GetSmtAssert(Identifiers)})";
             }
 
-            yield return string.Empty;
-
-            foreach (var quorum in _identifiers.Values.OfType<Quorum>().Where(quorum => !quorum.Constant))
+            // constant quorum thresholds
+            foreach (var quorum in Identifiers.Values.OfType<Quorum>().Where(identifier => identifier.Constant))
             {
                 yield return $"(assert (subset {quorum.Name} {UniversalSetIdentifier}))";
-            }
-
-            yield return string.Empty;
-
-            foreach (var quorum in _identifiers.Values.OfType<Quorum>())
-            {
                 var axiom = new NaturalFormula(new NatCardExpression(new SetVarExpression(quorum.Name)), quorum.Operation, quorum.Expression);
-                yield return $"(assert {axiom.GetSmtAssert(_identifiers)})";
+                yield return $"(assert {axiom.GetSmtAssert(Identifiers)})";
             }
 
             yield return string.Empty;
 
-            foreach (var spec in _formulas.Where(spec => spec.Conjecture))
+            var formula = conjecture.Formula.Negate();
+            var boundVariables = formula.Release(FormulaBind.BindType.ExistsSet).ToList();
+
+            // variables from conjecture
+            foreach (var boundVar in boundVariables)
             {
-                yield return $"; {spec}";
-                yield return $"(assert {spec.Formula.Negate().Release(FormulaBind.BindType.ExistsSet).GetSmtAssertActual(_identifiers)})";
+                if (!Identifiers.ContainsKey(boundVar.VarType)) throw new Exception("Unknown variable");
+                yield return $"(declare-fun {boundVar.VarName.ToUpper()} () (Set Int))";
+                yield return $"(assert (subset {boundVar.VarName.ToUpper()} {UniversalSetIdentifier}))";
+
+                var quorum = Identifiers[boundVar.VarType] as Quorum;
+                if (quorum == null) throw new Exception("Expected quorum identifier");
+
+                var axiom = new NaturalFormula(new NatCardExpression(new SetVarExpression(boundVar.VarName)), quorum.Operation, quorum.Expression);
+                var tempIdentifiers = new Dictionary<string, Identifier>(Identifiers.Where(pair => pair.Value.Constant).ToDict())
+                {
+                    [boundVar.VarName] = Identifiers[boundVar.VarType]
+                };
+                yield return $"(assert {axiom.GetSmtAssert(tempIdentifiers)})";
+                yield return string.Empty;
             }
+
+            yield return string.Empty;
+
+            yield return $"; {conjecture}";
+            yield return $"(assert {formula.GetSmtAssertActual(Identifiers)})";
+
+            yield return string.Empty;
+
+            yield return "(check-sat)";
+            yield return "(get-model)";
         }
     }
 }

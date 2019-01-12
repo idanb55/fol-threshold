@@ -12,8 +12,9 @@ namespace FolThresholdParser
         {
             try
             {
-                var inputFile = @"..\..\..\..\..\bosco2.folthreshold"; 
-                var outputDir = $@"..\..\..\..\..\out_{DateTime.Now:yyyy_MM_dd_HH_mm_ss}";
+                var inputFile = @"..\..\..\..\..\bosco2.folthreshold";
+                //var outputDir = $@"..\..\..\..\..\out_{DateTime.Now:yyyy_MM_dd_HH_mm_ss}";
+                var outputDir = $@"..\..\..\..\..\out";
 
                 var system = new FolThresholdSystem.FolThresholdSystem();
                 foreach (var t in Tokenizer.Tokenize(inputFile))
@@ -21,17 +22,16 @@ namespace FolThresholdParser
                     system.ParseCode(t.ToArray());
                 }
 
+                if(Directory.Exists(outputDir)) Directory.Delete(outputDir, true);
                 Directory.CreateDirectory(outputDir);
-                
-                foreach (var ivyAxiom in system.ToIvyAxioms())
-                {
-                    File.AppendAllLines(Path.Combine(outputDir, "ivy.ivy"), new[] {ivyAxiom});
-                }
 
-                foreach (var smtAssert in system.AssertThresholdSmt2())
+                File.AppendAllLines(Path.Combine(outputDir, "ivy.ivy"), system.ToIvyAxioms());
+
+                int counter = 0;
+                foreach (var specification in system.Formulas.Where(spec => spec.Conjecture))
                 {
-                    Console.WriteLine(smtAssert);
-                    //File.AppendAllLines(Path.Combine(outputDir, "threshold.smt2"), new[] { ivyAxiom });
+                    File.AppendAllLines(Path.Combine(outputDir, $"threshold_conjecture{counter}.smt2"), system.AssertThresholdSmt2(specification));
+                    counter++;
                 }
 
                 /**foreach (var bapaSetExpression in VennDiagram.VennDiagramIterator.GetVennZonesHelper(new []
@@ -47,8 +47,6 @@ namespace FolThresholdParser
             {
                 Console.WriteLine(ex);
             }
-
-            Console.Read();
         }
     }
 }
