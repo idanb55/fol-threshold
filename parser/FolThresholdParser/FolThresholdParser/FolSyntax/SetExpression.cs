@@ -148,7 +148,7 @@ namespace FolThresholdParser.FolSyntax
         public override string GetSmtAssert(Dictionary<string, Identifier> identifiers)
         {
             return
-                $"{Op.ToString().ToLower()} ({Expr1.GetSmtAssert(identifiers)}) ({Expr2.GetSmtAssert(identifiers)})";
+                $"({Op.ToString().ToLower()} {Expr1.GetSmtAssert(identifiers)} {Expr2.GetSmtAssert(identifiers)})";
         }
 
         public override string ToString()
@@ -176,7 +176,7 @@ namespace FolThresholdParser.FolSyntax
         public override string GetSmtAssert(Dictionary<string, Identifier> identifiers)
         {
             return
-                $"- {FolThresholdSystem.FolThresholdSystem.UniversalSetIdentifier} ({Expr.GetSmtAssert(identifiers)})";
+                $"(- {FolThresholdSystem.FolThresholdSystem.UniversalSetIdentifier} {Expr.GetSmtAssert(identifiers)})";
         }
 
         public override string ToString()

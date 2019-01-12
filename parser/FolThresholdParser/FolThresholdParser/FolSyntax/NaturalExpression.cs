@@ -123,7 +123,7 @@ namespace FolThresholdParser.FolSyntax
         public override IEnumerable<string> VariablesToBind => Expr.VariablesToBind;
         public override string GetSmtAssert(Dictionary<string, Identifier> identifiers)
         {
-            return $"* ({Constant.GetSmtAssert(identifiers)}) ({Expr.GetSmtAssert(identifiers)})";
+            return $"(* {Constant.GetSmtAssert(identifiers)} {Expr.GetSmtAssert(identifiers)})";
         }
 
         public override string ToString()
@@ -150,7 +150,7 @@ namespace FolThresholdParser.FolSyntax
 
         public override string GetSmtAssert(Dictionary<string, Identifier> identifiers)
         {
-            return $"card {SetExpr.GetSmtAssert(identifiers)}";
+            return $"(card {SetExpr.GetSmtAssert(identifiers)})";
         }
     }
 
@@ -187,7 +187,7 @@ namespace FolThresholdParser.FolSyntax
         public override string GetSmtAssert(Dictionary<string, Identifier> identifiers)
         {
             return
-                $"{Tokenizer.Keywords[(SyntaxKind) Op]} ({Expr1.GetSmtAssert(identifiers)}) ({Expr2.GetSmtAssert(identifiers)})";
+                $"({Tokenizer.Keywords[(SyntaxKind) Op]} {Expr1.GetSmtAssert(identifiers)} {Expr2.GetSmtAssert(identifiers)})";
         }
     }
 }

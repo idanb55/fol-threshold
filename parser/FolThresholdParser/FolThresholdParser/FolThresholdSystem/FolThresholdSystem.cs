@@ -15,8 +15,6 @@ namespace FolThresholdParser.FolThresholdSystem
 
         public FolThresholdSystem()
         {
-            //_identifiers[EmptysetIdentifier] = new Quorum(true, EmptysetIdentifier, SyntaxKind.EqualToken,new NatConstExpression(0));
-
             _identifiers[UniversalSetIdentifier] = new Quorum(true, UniversalSetIdentifier, SyntaxKind.EqualToken,
                 new NatVarExpression("n"));
 
@@ -111,7 +109,7 @@ namespace FolThresholdParser.FolThresholdSystem
 
             foreach (var spec in _formulas.Where(spec => !spec.Conjecture))
             {
-                yield return $"(assert ({spec.Formula.GetSmtAssert(_identifiers)}))";
+                yield return $"(assert {spec.Formula.GetSmtAssert(_identifiers)})";
             }
 
             yield return string.Empty;
@@ -126,7 +124,7 @@ namespace FolThresholdParser.FolThresholdSystem
             foreach (var quorum in _identifiers.Values.OfType<Quorum>())
             {
                 var axiom = new NaturalFormula(new NatCardExpression(new SetVarExpression(quorum.Name)), quorum.Operation, quorum.Expression);
-                yield return $"(assert ({axiom.GetSmtAssert(_identifiers)}))";
+                yield return $"(assert {axiom.GetSmtAssert(_identifiers)})";
             }
 
             yield return string.Empty;
@@ -134,7 +132,7 @@ namespace FolThresholdParser.FolThresholdSystem
             foreach (var spec in _formulas.Where(spec => spec.Conjecture))
             {
                 yield return $"; {spec}";
-                yield return $"(assert ({spec.Formula.Negate().Release(FormulaBind.BindType.ExistsSet).GetSmtAssertActual(_identifiers)}))";
+                yield return $"(assert {spec.Formula.Negate().Release(FormulaBind.BindType.ExistsSet).GetSmtAssertActual(_identifiers)})";
             }
         }
     }

@@ -120,7 +120,7 @@ namespace FolThresholdParser.FolSyntax
 
         public override string GetSmtAssert(Dictionary<string, Identifier> identifiers)
         {
-            return $"{Op.ToString().ToLower()} ({Form1.GetSmtAssert(identifiers)}) ({Form2.GetSmtAssert(identifiers)})";
+            return $"({Op.ToString().ToLower()} {Form1.GetSmtAssert(identifiers)} {Form2.GetSmtAssert(identifiers)})";
         }
 
         public override Formula Negate()
@@ -164,7 +164,7 @@ namespace FolThresholdParser.FolSyntax
 
         public override string GetSmtAssert(Dictionary<string, Identifier> identifiers)
         {
-            return $"not ({_inner.GetSmtAssert(identifiers)})";
+            return $"(not {_inner.GetSmtAssert(identifiers)})";
         }
 
         public override Formula Negate()
@@ -237,7 +237,7 @@ namespace FolThresholdParser.FolSyntax
         public override string GetSmtAssert(Dictionary<string, Identifier> identifiers)
         {
             if (_released) return _inner.GetSmtAssert(identifiers);
-            return $"{GetBindTypeTextual()} (({_varName} (Set Int))) ({_inner.GetSmtAssert(identifiers)})"; // TODO add the quorum rule as an assumption
+            return $"({GetBindTypeTextual()} (({_varName} (Set Int))) {_inner.GetSmtAssert(identifiers)})"; // TODO add the quorum rule as an assumption
         }
 
         public override Formula Negate()
@@ -314,7 +314,7 @@ namespace FolThresholdParser.FolSyntax
 
         public override string GetSmtAssert(Dictionary<string, Identifier> identifiers)
         {
-            return $"{Tokenizer.Keywords[(SyntaxKind) Rel]} ({Expr1.GetSmtAssert(identifiers)}) ({Expr2.GetSmtAssert(identifiers)})";
+            return $"({Tokenizer.Keywords[(SyntaxKind) Rel]} {Expr1.GetSmtAssert(identifiers)} {Expr2.GetSmtAssert(identifiers)})";
         }
 
         private NatRelation GetNegOp()
@@ -410,11 +410,11 @@ namespace FolThresholdParser.FolSyntax
             switch (Rel)
             {
                 case SetRelation.Equal:
-                    return $"= ({expr1Smt}) ({expr2Smt})";
+                    return $"(= {expr1Smt} {expr2Smt})";
                 case SetRelation.NotEuqal:
-                    return $"!= ({expr1Smt}) ({expr2Smt})";
+                    return $"(!= {expr1Smt} {expr2Smt})";
                 case SetRelation.Subseteq:
-                    return $"subset ({expr1Smt}) ({expr2Smt})";
+                    return $"(subset {expr1Smt} {expr2Smt})";
                 default:
                     throw new ArgumentOutOfRangeException();
             }
