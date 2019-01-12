@@ -12,10 +12,9 @@ namespace FolThresholdParser.VennDiagram
             for (var j = 0; j < variables.Count; ++j)
             {
                 if ((mask & (1 << j)) == 0)
-                {
                     yield return variables[j];
-                }
-                yield return new SetComplementExpression(variables[j]);
+                else
+                    yield return new SetComplementExpression(variables[j]);
             }
         }
 

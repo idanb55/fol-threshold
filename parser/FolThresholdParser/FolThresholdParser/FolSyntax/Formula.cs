@@ -210,10 +210,14 @@ namespace FolThresholdParser.FolSyntax
             ForallSet = SyntaxKind.ForallSetKeyword,
         }
 
-        public FormulaBind(BindType type, string varType, string varName, Formula inner)
+        private FormulaBind(Bind bind, Formula inner)
         {
-            _bind = new Bind(type, varType, varName);
+            _bind = bind;
             _inner = inner;
+        }
+
+        public FormulaBind(BindType type, string varType, string varName, Formula inner) : this(new Bind(type, varType, varName), inner)
+        {
         }
 
         public FormulaBind(SyntaxKind type, string varType, string varName, Formula inner) : this((BindType)type, varType, varName, inner)
@@ -277,6 +281,11 @@ namespace FolThresholdParser.FolSyntax
                 throw new Exception("Illegal formula found");
             return new FormulaBind(bindType, tokens[2].Value, tokens[0].Value,
                 ParseInternal(bindType, tokens.Skip(4), inner));
+        }
+
+        public static Formula Aggregate(Bind[] binds, Formula inner)
+        {
+            return binds.Aggregate(inner, (formula, bind) => new FormulaBind(bind, formula));
         }
 
         public override IEnumerable<Bind> Release(BindType bindType)

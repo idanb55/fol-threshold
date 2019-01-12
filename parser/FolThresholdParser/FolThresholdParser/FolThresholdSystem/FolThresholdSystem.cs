@@ -173,5 +173,82 @@ namespace FolThresholdParser.FolThresholdSystem
             yield return "(check-sat)";
             yield return "(get-model)";
         }
+
+        public IEnumerable<Specification> ProduceConjectures()
+        {
+            var constantQuorums = Identifiers.Values.OfType<Quorum>().Where(quorum => quorum.Constant)
+                .Where(quorum => quorum.Name != EmptySetIdentifier)
+                .Where(quorum => quorum.Name != UniversalSetIdentifier).ToArray();
+            var quorums = Identifiers.Values.OfType<Quorum>().Where(quorum => !quorum.Constant).ToArray();
+            foreach (var sets in ProduceVarSet(constantQuorums, quorums))
+            {
+                foreach (var expr in VennDiagram.VennDiagramIterator.GetVennZonesHelper(sets.Item1))
+                {
+                    yield return new Specification
+                    {
+                        Conjecture = true,
+                        NaturalSpec = false,
+                        Formula = FormulaBind.Aggregate(sets.Item2, new SetFormula(expr, SetFormula.SetRelation.NotEuqal, new SetVarExpression(EmptySetIdentifier)))
+                    };
+                    foreach (var quorum in quorums)
+                    {
+                        yield return new Specification
+                        {
+                            Conjecture = true,
+                            NaturalSpec = false,
+                            Formula = FormulaBind.Aggregate(sets.Item2, new SetRelationFormula(expr, quorum.Name))
+                        };
+                    }
+                }
+            }
+        }
+
+        private IEnumerable<Tuple<SetVarExpression[], FormulaBind.Bind[]>> ProduceVarSet(Quorum[] constantQuorums, Quorum[] quorums)
+        {
+            for (var numberOfVars = 1; ; ++numberOfVars)
+            {
+                foreach (var tuple in ProduceVarSetHelper(constantQuorums, quorums, numberOfVars))
+                {
+                    yield return tuple;
+                }
+            }
+        }
+
+        private int _variableIndex = 1;
+
+        private IEnumerable<Tuple<SetVarExpression[], FormulaBind.Bind[]>> ProduceVarSetHelper(Quorum[] constantQuorums,
+            Quorum[] quorums, int level)
+        {
+            int myLevel = level;
+            if (myLevel == 0 || constantQuorums.Length + quorums.Length == 0)
+            {
+                yield return new Tuple<SetVarExpression[], FormulaBind.Bind[]>(new SetVarExpression[] { },
+                    new FormulaBind.Bind[] { });
+                yield break;
+            }
+
+            for (var i = 0; i < constantQuorums.Length; ++i)
+            {
+                var newConstants = constantQuorums.ToList();
+                newConstants.RemoveAt(i);
+                foreach (var tuple in ProduceVarSetHelper(newConstants.ToArray(), quorums, myLevel - 1))
+                {
+                    yield return new Tuple<SetVarExpression[], FormulaBind.Bind[]>(
+                        tuple.Item1.Add(new SetVarExpression(constantQuorums[i].Name)).ToArray(), tuple.Item2);
+                }
+            }
+
+            for (var i = 0; i < quorums.Length; ++i)
+            {
+                foreach (var tuple in ProduceVarSetHelper(constantQuorums, quorums, level - 1))
+                {
+                    string varName = $"{quorums[i].Name}_{StringUtils.IntToUniqueString(_variableIndex++)}";
+                    yield return new Tuple<SetVarExpression[], FormulaBind.Bind[]>(
+                        tuple.Item1.Add(new SetVarExpression(varName)).ToArray(),
+                        tuple.Item2.Add(new FormulaBind.Bind(FormulaBind.BindType.ForallSet, quorums[i].Name, varName))
+                            .ToArray());
+                }
+            }
+        }
     }
 }

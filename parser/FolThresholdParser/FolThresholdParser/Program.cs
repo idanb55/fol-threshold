@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using FolThresholdParser.FolSyntax;
 using FolThresholdParser.Parser;
+using FolThresholdParser.Utils;
 
 namespace FolThresholdParser
 {
@@ -30,7 +32,14 @@ namespace FolThresholdParser
                 int counter = 0;
                 foreach (var specification in system.Formulas.Where(spec => spec.Conjecture))
                 {
-                    File.AppendAllLines(Path.Combine(outputDir, $"threshold_conjecture{counter}.smt2"), system.AssertThresholdSmt2(specification));
+                    File.AppendAllLines(Path.Combine(outputDir, $"threshold_conjecture{counter:D5}.smt2"), system.AssertThresholdSmt2(specification));
+                    counter++;
+                }
+                
+                counter = 0;
+                foreach (var specification in system.ProduceConjectures().Take(9999))
+                {
+                    File.AppendAllLines(Path.Combine(outputDir, $"auto_threshold_conjecture{counter:D5}.smt2"), system.AssertThresholdSmt2(specification));
                     counter++;
                 }
 
