@@ -86,13 +86,5 @@ namespace FolThresholdParser.FolSyntax
             if (tokens[1].GeneralType != SyntaxGeneralType.ComparisonOperators) throw new ParserTokenException("expected comparison operator", tokens[0]);
             return new Quorum(constant, tokens[0].Value, tokens[1].Type, NaturalExpression.Parse(tokens.Skip(2)));
         }
-
-        /**public BapaFormula.BapaFormula GetQuorumAssumption(int index = 0)
-        {
-            var name = Name;
-            if (!Constant) name += index;
-            BapaFormula.BapaFormula formula = new BapaNatRelation(NaturalFormula.ToNatRelation(Operation), new BapaCard(new BapaSetVar(name)), Expression.ToBapaNatExpression());
-            return formula;
-        }**/
     }
 }

@@ -3,7 +3,7 @@ constant natural t
 
 axiom natural n > 3t
 
-constant quorum f == 2t
+constant quorum f = 2t
 
 quorum A >= 2n - 2t
 quorum B > n + 3t
@@ -18,9 +18,9 @@ conjecture set exists a:A. a <= ~f
 conjecture set forall a:A. a & ~f != emptyset
 
 # Weak 
-axiom natural n > 5t
-conjecture set forall a:A. exists b:B. b <= a & ~f
+#axiom natural n > 5t
+#conjecture set forall a:A. exists b:B. b <= a & ~f
 
 # Hard
-axiom natural n > 7t
-conjecture set forall a:A. exists b:B. b <= a
+#axiom natural n > 7t
+#conjecture set forall a:A. exists b:B. b <= a

@@ -52,6 +52,7 @@ namespace FolThresholdParser.FolSyntax
         }
 
         public abstract string ToIvyAxiom(Dictionary<string, Identifier> identifiers);
+        public abstract string GetSmtAssert(Dictionary<string, Identifier> identifiers);
     }
 
     public class SetVarExpression : SetExpression
@@ -73,12 +74,17 @@ namespace FolThresholdParser.FolSyntax
             var identifier = identifiers[Name];
             return $"member_{identifier.Name.ToLower()}(N, {Name.ToUpper()})";
         }
+
+        public override string GetSmtAssert(Dictionary<string, Identifier> identifiers)
+        {
+            return Name;
+        }
     }
 
     public class SetOpExpression : SetExpression
     {
         protected readonly SetExpression Expr1;
-        protected readonly SyntaxKind Op;
+        protected readonly SetRelation Op;
         protected readonly SetExpression Expr2;
 
         public override IEnumerable<string> VariablesToBind => Expr1.VariablesToBind.Concat(Expr2.VariablesToBind);
@@ -86,7 +92,7 @@ namespace FolThresholdParser.FolSyntax
         public SetOpExpression(SetExpression expr1, SyntaxKind setOperation, SetExpression expr2)
         {
             Expr1 = expr1;
-            Op = setOperation;
+            Op = (SetRelation)setOperation;
             Expr2 = expr2;
         }
 
@@ -95,27 +101,20 @@ namespace FolThresholdParser.FolSyntax
             return expressions.Aggregate((expr1, expr2) => new SetOpExpression(expr1, setOperation, expr2));
         }
 
-        enum SetRelation
+        public  enum SetRelation
         {
-            Intersection, Union
-        }
-
-        private static SetRelation GetOperation(SyntaxKind op)
-        {
-            switch (op)
-            {
-                case SyntaxKind.AndOperationToken:
-                    return SetRelation.Intersection;
-                case SyntaxKind.OrOperationToken:
-                    return SetRelation.Union;
-                default:
-                    throw new Exception("Illegal Natural operation");
-            }
+            Intersection = SyntaxKind.AndOperationToken, Union = SyntaxKind.OrOperationToken
         }
 
         public override string ToIvyAxiom(Dictionary<string, Identifier> identifiers)
         {
-            return $"{Expr1.ToIvyAxiom(identifiers)} {Tokenizer.Keywords[Op]} {Expr2.ToIvyAxiom(identifiers)}";
+            return $"{Expr1.ToIvyAxiom(identifiers)} {Tokenizer.Keywords[(SyntaxKind)Op]} {Expr2.ToIvyAxiom(identifiers)}";
+        }
+
+        public override string GetSmtAssert(Dictionary<string, Identifier> identifiers)
+        {
+            return
+                $"{Op.ToString().ToLower()} ({Expr1.GetSmtAssert(identifiers)}) ({Expr2.GetSmtAssert(identifiers)})";
         }
     }
 
@@ -133,6 +132,12 @@ namespace FolThresholdParser.FolSyntax
         public override string ToIvyAxiom(Dictionary<string, Identifier> identifiers)
         {
             return $"~{Expr.ToIvyAxiom(identifiers)}";
+        }
+
+        public override string GetSmtAssert(Dictionary<string, Identifier> identifiers)
+        {
+            return
+                $"- {FolThresholdSystem.FolThresholdSystem.UniversalSetIdentifier} ({Expr.GetSmtAssert(identifiers)})";
         }
     }
 }

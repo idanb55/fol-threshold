@@ -9,60 +9,25 @@ using FolThresholdParser.Utils;
 
 namespace FolThresholdParser.FolThresholdSystem
 {
-    public abstract class Specification
+    public class Specification
     {
-        public readonly bool Conjecture;
-
-        protected Specification(bool conjecture)
-        {
-            Conjecture = conjecture;
-        }
+        public bool Conjecture;
+        public bool NaturalSpec;
+        public Formula Formula;
 
         public static Specification Parse(ArrayView<Token> tokens)
         {
-            bool conjecture = tokens[0].Type == SyntaxKind.ConjectureKeyword;
-
-            switch (tokens[1].Type)
+            return new Specification
             {
-                case SyntaxKind.NaturalKeyword:
-                    return new NaturalSpecification(conjecture, tokens);
-                //case SyntaxKind.NonEmptyKeyword:
-                    //return NonEmptySetFormula.ParseInternal(conjecture, tokens.Skip(2));
-                case SyntaxKind.SetKeyword:
-                    return new SetSpecification(conjecture, tokens);
-                default:
-                    return null;
-            }
+                Conjecture = tokens[0].Type == SyntaxKind.ConjectureKeyword,
+                NaturalSpec = tokens[1].Type == SyntaxKind.NaturalKeyword,
+                Formula = tokens[1].Type == SyntaxKind.NaturalKeyword
+                    ? NaturalFormula.Parse(tokens.Skip(2))
+                    : SetFormula.Parse(tokens.Skip(2))
+            };
         }
 
-        public abstract string ToBoundIvyAxiom(Dictionary<string, Identifier> identifiers);
-    }
-
-    public class NaturalSpecification : Specification
-    {
-        public readonly Formula Formula;
-
-        public NaturalSpecification(bool conjecture, ArrayView<Token> tokens) : base(conjecture)
-        {
-            Formula = NaturalFormula.Parse(tokens.Skip(2));
-        }
-
-        public override string ToBoundIvyAxiom(Dictionary<string, Identifier> identifiers)
-        {
-            throw new NotImplementedException();
-        }
-    }
-
-    public class SetSpecification : Specification
-    {
-        public readonly Formula Formula;
-
-        public SetSpecification(bool conjecture, ArrayView<Token> tokens) : base(conjecture)
-        {
-            Formula = SetFormula.Parse(tokens.Skip(2));
-        }
-
-        public override string ToBoundIvyAxiom(Dictionary<string, Identifier> identifiers)
+        public string ToBoundIvyAxiom(Dictionary<string, Identifier> identifiers)
         {
             return Formula.ToBoundIvyAxiomActual(identifiers);
         }

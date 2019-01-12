@@ -76,6 +76,8 @@ namespace FolThresholdParser.FolSyntax
         }
 
         public abstract string ToBoundIvyAxiom(Dictionary<string, Identifier> identifiers);
+
+        public abstract string GetSmtAssert(Dictionary<string, Identifier> identifiers);
     }
 
     public class FormulaOperation : Formula
@@ -105,6 +107,11 @@ namespace FolThresholdParser.FolSyntax
             }
 
             return $"{Form1.ToBoundIvyAxiom(identifiers)} {op} {Form2.ToBoundIvyAxiom(identifiers)}";
+        }
+
+        public override string GetSmtAssert(Dictionary<string, Identifier> identifiers)
+        {
+            return $"{Op.ToString().ToLower()} ({Form1.GetSmtAssert(identifiers)}) ({Form2.GetSmtAssert(identifiers)})";
         }
 
         public FormulaOperation(Formula form1, SyntaxKind natOperation, Formula form2)
@@ -148,6 +155,11 @@ namespace FolThresholdParser.FolSyntax
         public override string ToBoundIvyAxiom(Dictionary<string, Identifier> identifiers)
         {
             return $"~{_inner.ToBoundIvyAxiom(identifiers)}";
+        }
+
+        public override string GetSmtAssert(Dictionary<string, Identifier> identifiers)
+        {
+            return $"not ({_inner.GetSmtAssert(identifiers)})";
         }
     }
 
@@ -193,6 +205,11 @@ namespace FolThresholdParser.FolSyntax
 
         public override string ToBoundIvyAxiom(Dictionary<string, Identifier> identifiers)
         {
+            return $"{GetBindTypeTextual()} {_varName.ToUpper()}:quorum_{_varType.ToLower()}. {_inner.ToBoundIvyAxiom(identifiers)}";
+        }
+
+        private string GetBindTypeTextual()
+        {
             string bind;
             switch (_bindType)
             {
@@ -206,7 +223,12 @@ namespace FolThresholdParser.FolSyntax
                     throw new ArgumentOutOfRangeException();
             }
 
-            return $"{bind} {_varName.ToUpper()}:quorum_{_varType.ToLower()}. {_inner.ToBoundIvyAxiom(identifiers)}";
+            return bind;
+        }
+
+        public override string GetSmtAssert(Dictionary<string, Identifier> identifiers)
+        {
+            return $"{GetBindTypeTextual()} (({_varName} (Set Int))) ({_inner.GetSmtAssert(identifiers)})"; // TODO add the quorum rule as an assumption
         }
 
         public static Formula ParseInternal(SyntaxKind bindType, ArrayView<Token> tokens, Formula inner)
@@ -232,7 +254,7 @@ namespace FolThresholdParser.FolSyntax
         {
             Expr1 = expr1;
             Expr2 = expr2;
-            Rel = ToNatRelation(comparisonOp);
+            Rel = (NatRelation)comparisonOp;
         }
 
         public static Formula Parse(ArrayView<Token> tokens)
@@ -244,42 +266,23 @@ namespace FolThresholdParser.FolSyntax
 
         public enum NatRelation
         {
-            Less,
-            Leq,
-            Greater,
-            Geq,
-            Inteq,
-            Intneq
-        }
-
-        public static NatRelation ToNatRelation(SyntaxKind comparisonOp)
-        {
-            switch (comparisonOp)
-            {
-                case SyntaxKind.EqualToken:
-                    return NatRelation.Inteq;
-                case SyntaxKind.InEqualToken:
-                    return NatRelation.Intneq;
-
-                case SyntaxKind.GreaterThanToken:
-                    return NatRelation.Greater;
-                case SyntaxKind.GeqThanToken:
-                    return NatRelation.Geq;
-
-                case SyntaxKind.LessThanToken:
-                    return NatRelation.Less;
-                case SyntaxKind.LeqThanToken:
-                    return NatRelation.Leq;
-
-                default:
-                    throw new Exception($"Illegal syntax kind {comparisonOp}");
-            }
+            Less = SyntaxKind.LessThanToken,
+            Leq = SyntaxKind.LeqThanToken,
+            Greater = SyntaxKind.GreaterThanToken,
+            Geq = SyntaxKind.GeqThanToken,
+            Inteq = SyntaxKind.EqualToken,
+            Intneq = SyntaxKind.InEqualToken
         }
 
         public override IEnumerable<string> VariablesToBind => Expr1.VariablesToBind.Concat(Expr2.VariablesToBind);
         public override string ToBoundIvyAxiom(Dictionary<string, Identifier> identifiers)
         {
             throw new NotImplementedException();
+        }
+
+        public override string GetSmtAssert(Dictionary<string, Identifier> identifiers)
+        {
+            return $"{Tokenizer.Keywords[(SyntaxKind) Rel]} ({Expr1.GetSmtAssert(identifiers)}) ({Expr2.GetSmtAssert(identifiers)})";
         }
     }
 
@@ -337,6 +340,23 @@ namespace FolThresholdParser.FolSyntax
                     return $"~(forall N:node. {expr1Ivy} <-> {expr2Ivy})";
                 case SetRelation.Subseteq:
                     return $"forall N:node. {expr1Ivy} -> {expr2Ivy}";
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        public override string GetSmtAssert(Dictionary<string, Identifier> identifiers)
+        {
+            var expr1Smt = Expr1.GetSmtAssert(identifiers);
+            var expr2Smt = Expr2.GetSmtAssert(identifiers);
+            switch (Rel)
+            {
+                case SetRelation.Equal:
+                    return $"= ({expr1Smt}) ({expr2Smt})";
+                case SetRelation.NotEuqal:
+                    return $"!= ({expr1Smt}) ({expr2Smt})";
+                case SetRelation.Subseteq:
+                    return $"subset ({expr1Smt}) ({expr2Smt})";
                 default:
                     throw new ArgumentOutOfRangeException();
             }

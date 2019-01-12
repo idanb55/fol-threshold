@@ -70,7 +70,7 @@ namespace FolThresholdParser.Parser
             { SyntaxKind.OrOperationToken,         ("|")        },
             { SyntaxKind.ComplementOperationToken,         ("~")        },
 
-            { SyntaxKind.EqualToken,                 ("==")            },
+            { SyntaxKind.EqualToken,                 ("=")            },
             { SyntaxKind.InEqualToken,              ("!=")         },
 
             { SyntaxKind.GeqThanToken,              (">=")         },

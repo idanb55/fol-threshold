@@ -48,6 +48,8 @@ namespace FolThresholdParser.FolSyntax
                 ? leftExpr
                 : new NatOpExpression(leftExpr, tokens[cursor].Type, Parse(tokens.Skip(cursor + 1)));
         }
+
+        public abstract string GetSmtAssert(Dictionary<string, Identifier> identifiers);
     }
 
     public class NatConstExpression : NaturalExpression
@@ -65,6 +67,11 @@ namespace FolThresholdParser.FolSyntax
             {
                 yield break;
             }
+        }
+
+        public override string GetSmtAssert(Dictionary<string, Identifier> identifiers)
+        {
+            return ToString();
         }
 
         public override string ToString()
@@ -91,6 +98,11 @@ namespace FolThresholdParser.FolSyntax
             }
         }
 
+        public override string GetSmtAssert(Dictionary<string, Identifier> identifiers)
+        {
+            return ToString();
+        }
+
         public override string ToString()
         {
             return Name;
@@ -109,6 +121,10 @@ namespace FolThresholdParser.FolSyntax
         }
 
         public override IEnumerable<string> VariablesToBind => Expr.VariablesToBind;
+        public override string GetSmtAssert(Dictionary<string, Identifier> identifiers)
+        {
+            return $"* ({Constant.GetSmtAssert(identifiers)}) ({Expr.GetSmtAssert(identifiers)})";
+        }
 
         public override string ToString()
         {
@@ -131,20 +147,25 @@ namespace FolThresholdParser.FolSyntax
         {
             return $"|{SetExpr}|";
         }
+
+        public override string GetSmtAssert(Dictionary<string, Identifier> identifiers)
+        {
+            return $"card ({SetExpr.GetSmtAssert(identifiers)})";
+        }
     }
 
     public class NatOpExpression : NaturalExpression
     {
         public NaturalExpression Expr1 { get; protected set; }
-        public SyntaxKind Op { get; protected set; }
+        public NatRelation Op { get; protected set; }
         public NaturalExpression Expr2 { get; protected set; }
 
         public override IEnumerable<string> VariablesToBind => Expr1.VariablesToBind.Concat(Expr2.VariablesToBind);
-
+        
         public NatOpExpression(NaturalExpression expr1, SyntaxKind natOperation, NaturalExpression expr2)
         {
             Expr1 = expr1;
-            Op = natOperation;
+            Op = (NatRelation)natOperation;
             Expr2 = expr2;
         }
 
@@ -155,25 +176,18 @@ namespace FolThresholdParser.FolSyntax
 
         public enum NatRelation
         {
-            Plus, Minus
-        }
-
-        private static NatRelation GetOperation(SyntaxKind op)
-        {
-            switch (op)
-            {
-                case SyntaxKind.PlusOperationToken:
-                    return NatRelation.Plus;
-                case SyntaxKind.MinusOperationToken:
-                    return NatRelation.Minus;
-                default:
-                    throw new Exception("Illegal Natural operation");
-            }
+            Plus = SyntaxKind.PlusOperationToken, Minus = SyntaxKind.MinusOperationToken
         }
 
         public override string ToString()
         {
-            return $"{Expr1} {Tokenizer.Keywords[Op]} {Expr2}";
+            return $"{Expr1} {Tokenizer.Keywords[(SyntaxKind)Op]} {Expr2}";
+        }
+
+        public override string GetSmtAssert(Dictionary<string, Identifier> identifiers)
+        {
+            return
+                $"{Tokenizer.Keywords[(SyntaxKind) Op]} ({Expr1.GetSmtAssert(identifiers)}) ({Expr2.GetSmtAssert(identifiers)})";
         }
     }
 }
