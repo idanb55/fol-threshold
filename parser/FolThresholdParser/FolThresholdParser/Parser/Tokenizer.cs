@@ -41,8 +41,6 @@ namespace FolThresholdParser.Parser
         public static readonly Dictionary<SyntaxKind, string> Keywords = new Dictionary<SyntaxKind, string>
         {
             // keywords
-            {SyntaxKind.EmptySetKeyword, "emptyset"},
-            //{SyntaxKind.GlobalSetKeyword, "globalset"},
             {SyntaxKind.ConstantKeyword, "constant"},
             {SyntaxKind.NaturalKeyword, "natural"},
             {SyntaxKind.QuorumKeyword, "quorum"},

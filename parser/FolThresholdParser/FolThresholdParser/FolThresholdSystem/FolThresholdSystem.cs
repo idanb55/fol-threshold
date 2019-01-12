@@ -8,13 +8,17 @@ namespace FolThresholdParser.FolThresholdSystem
 {
     public class FolThresholdSystem
     {
-        public const string UniversalSetIdentifier = "U";
+        public const string EmptySetIdentifier = "EMPTYSET";
+        public const string UniversalSetIdentifier = "UNIVERSALSET";
 
         private readonly Dictionary<string, Identifier> _identifiers = new Dictionary<string, Identifier>();
         private readonly List<Specification> _formulas = new List<Specification>();
 
         public FolThresholdSystem()
         {
+            _identifiers[EmptySetIdentifier] = new Quorum(true, EmptySetIdentifier, SyntaxKind.EqualToken,
+                new NatConstExpression(0));
+
             _identifiers[UniversalSetIdentifier] = new Quorum(true, UniversalSetIdentifier, SyntaxKind.EqualToken,
                 new NatVarExpression("n"));
 
