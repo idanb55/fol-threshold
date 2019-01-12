@@ -62,7 +62,7 @@ namespace FolThresholdParser.Parser
         ExistsSetKeyword,
 
         // Literal Values
-        //EmptySetKeyword,
+        EmptySetKeyword,
         //GlobalSetKeyword,
 
         OpenParenthesisToken,
@@ -125,7 +125,7 @@ namespace FolThresholdParser.Parser
                 case SyntaxKind.ConjectureKeyword:
                 case SyntaxKind.NonEmptyKeyword:
                 case SyntaxKind.SetKeyword:
-                //case SyntaxKind.EmptySetKeyword:
+                case SyntaxKind.EmptySetKeyword:
                 //case SyntaxKind.GlobalSetKeyword:
                 case SyntaxKind.NotKeyword:
                 case SyntaxKind.AndKeyword:

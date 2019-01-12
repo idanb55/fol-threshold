@@ -8,16 +8,14 @@ namespace FolThresholdParser.FolThresholdSystem
 {
     public class FolThresholdSystem
     {
-        public const string EmptysetIdentifier = "emptyset";
-        public const string UniversalSetIdentifier = "universalset";
+        public const string UniversalSetIdentifier = "U";
 
         private readonly Dictionary<string, Identifier> _identifiers = new Dictionary<string, Identifier>();
         private readonly List<Specification> _formulas = new List<Specification>();
 
         public FolThresholdSystem()
         {
-            _identifiers[EmptysetIdentifier] = new Quorum(true, EmptysetIdentifier, SyntaxKind.EqualToken,
-                new NatConstExpression(0));
+            //_identifiers[EmptysetIdentifier] = new Quorum(true, EmptysetIdentifier, SyntaxKind.EqualToken,new NatConstExpression(0));
 
             _identifiers[UniversalSetIdentifier] = new Quorum(true, UniversalSetIdentifier, SyntaxKind.EqualToken,
                 new NatVarExpression("n"));
@@ -81,6 +79,7 @@ namespace FolThresholdParser.FolThresholdSystem
                 else yield return $"relation member_{quorum.Name.ToLower()}(N:node, Q:quorum_{quorum.Name.ToLower()})";
             }
 
+            yield return $"relation member_emptyset(N:node)";
             yield return "axiom forall N:node. ~member_emptyset(N)";
 
             foreach (var formula in _formulas.Where(spec => spec.Conjecture))
@@ -135,6 +134,7 @@ namespace FolThresholdParser.FolThresholdSystem
             foreach (var spec in _formulas.Where(spec => spec.Conjecture))
             {
                 yield return $"; {spec}";
+                yield return $"(assert ({spec.Formula.Negate().Release(FormulaBind.BindType.ExistsSet).GetSmtAssertActual(_identifiers)}))";
             }
         }
     }

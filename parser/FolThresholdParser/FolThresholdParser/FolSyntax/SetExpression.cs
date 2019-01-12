@@ -25,6 +25,10 @@ namespace FolThresholdParser.FolSyntax
                 var varName = tokens[cursor].Value;
                 ++cursor;
                 leftExpr = new SetVarExpression(varName);
+            } else if (tokens[cursor].Type == SyntaxKind.EmptySetKeyword)
+            {
+                ++cursor;
+                leftExpr = new EmptySetExpression();
             }
             else if (tokens[cursor].Type == SyntaxKind.ComplementOperationToken)
             {
@@ -55,6 +59,28 @@ namespace FolThresholdParser.FolSyntax
         public abstract string GetSmtAssert(Dictionary<string, Identifier> identifiers);
     }
 
+    public class EmptySetExpression : SetExpression
+    {
+        public override IEnumerable<string> VariablesToBind => new string[0];
+
+        public const string EmptysetIdentifier = "emptyset";
+
+        public override string ToIvyAxiom(Dictionary<string, Identifier> identifiers)
+        {
+            return $"member_{EmptysetIdentifier.ToLower()}(N)";
+        }
+
+        public override string GetSmtAssert(Dictionary<string, Identifier> identifiers)
+        {
+            return EmptysetIdentifier;
+        }
+
+        public override string ToString()
+        {
+            return EmptysetIdentifier;
+        }
+    }
+
     public class SetVarExpression : SetExpression
     {
         protected readonly string Name;
@@ -77,7 +103,10 @@ namespace FolThresholdParser.FolSyntax
 
         public override string GetSmtAssert(Dictionary<string, Identifier> identifiers)
         {
-            return Name;
+            if (!identifiers.ContainsKey(Name))
+                throw new Exception($"Unknown identifier {Name}");
+            if (identifiers[Name].Constant) return Name;
+            return identifiers[Name].Name;
         }
 
         public override string ToString()

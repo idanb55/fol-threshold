@@ -150,7 +150,7 @@ namespace FolThresholdParser.FolSyntax
 
         public override string GetSmtAssert(Dictionary<string, Identifier> identifiers)
         {
-            return $"card ({SetExpr.GetSmtAssert(identifiers)})";
+            return $"card {SetExpr.GetSmtAssert(identifiers)}";
         }
     }
 
