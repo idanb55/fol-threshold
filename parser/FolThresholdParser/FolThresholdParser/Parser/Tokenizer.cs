@@ -66,6 +66,7 @@ namespace FolThresholdParser.Parser
 
             { SyntaxKind.PlusOperationToken,          ("+")        },
             { SyntaxKind.MinusOperationToken,         ("-")        },
+            { SyntaxKind.DivOperationToken,          ("/")        },
             { SyntaxKind.AndOperationToken,          ("&")        },
             { SyntaxKind.OrOperationToken,         ("|")        },
             { SyntaxKind.ComplementOperationToken,         ("~")        },

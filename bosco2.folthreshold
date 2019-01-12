@@ -3,11 +3,11 @@ constant natural t
 
 axiom natural n > 3t
 
-constant quorum f = 2t
+constant quorum f = t
 
-quorum A >= 2n - 2t
-quorum B > n + 3t
-quorum C > n - t
+quorum A >= n - t
+quorum B > (n + 3t) / 2
+quorum C > (n - t) / 2
 
 conjecture set forall b:B,d:B. b & d & ~f != emptyset
 conjecture set forall a:A,b:B. exists c:C. c <= a & b & ~f

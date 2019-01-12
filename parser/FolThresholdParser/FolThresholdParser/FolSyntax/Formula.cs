@@ -314,7 +314,14 @@ namespace FolThresholdParser.FolSyntax
 
         public override string GetSmtAssert(Dictionary<string, Identifier> identifiers)
         {
-            return $"({Tokenizer.Keywords[(SyntaxKind) Rel]} {Expr1.GetSmtAssert(identifiers)} {Expr2.GetSmtAssert(identifiers)})";
+            var reduce1 = NatConstDivExpression.Reduce(Expr1);
+            var reduce2 = NatConstDivExpression.Reduce(Expr2);
+            var gcd = NatConstDivExpression.Gcd(reduce1.Item2, reduce2.Item2);
+
+            var expr1 = NatConstMulExpression.Mul(reduce2.Item2 / gcd, reduce1.Item1);
+            var expr2 = NatConstMulExpression.Mul(reduce1.Item2 / gcd, reduce2.Item1);
+
+            return $"({Tokenizer.Keywords[(SyntaxKind) Rel]} {expr1.GetSmtAssert(identifiers)} {expr2.GetSmtAssert(identifiers)})";
         }
 
         private NatRelation GetNegOp()

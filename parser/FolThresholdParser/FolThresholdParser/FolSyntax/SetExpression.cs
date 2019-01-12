@@ -176,7 +176,7 @@ namespace FolThresholdParser.FolSyntax
         public override string GetSmtAssert(Dictionary<string, Identifier> identifiers)
         {
             return
-                $"(- {FolThresholdSystem.FolThresholdSystem.UniversalSetIdentifier} {Expr.GetSmtAssert(identifiers)})";
+                $"(setminus {FolThresholdSystem.FolThresholdSystem.UniversalSetIdentifier} {Expr.GetSmtAssert(identifiers)})";
         }
 
         public override string ToString()

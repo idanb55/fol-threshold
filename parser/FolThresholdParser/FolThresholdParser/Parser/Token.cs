@@ -23,6 +23,7 @@ namespace FolThresholdParser.Parser
         // math operators
         PlusOperationToken,
         MinusOperationToken,
+        DivOperationToken,
 
         // set operators
         AndOperationToken,
@@ -100,6 +101,7 @@ namespace FolThresholdParser.Parser
                     return SyntaxGeneralType.None;
                 case SyntaxKind.PlusOperationToken:
                 case SyntaxKind.MinusOperationToken:
+                case SyntaxKind.DivOperationToken:
                     return SyntaxGeneralType.MathOperators;
                 case SyntaxKind.AndOperationToken:
                 case SyntaxKind.OrOperationToken:
