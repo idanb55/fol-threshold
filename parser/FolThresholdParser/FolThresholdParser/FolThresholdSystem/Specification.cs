@@ -31,5 +31,12 @@ namespace FolThresholdParser.FolThresholdSystem
         {
             return Formula.ToBoundIvyAxiomActual(identifiers);
         }
+
+        public override string ToString()
+        {
+            var conjecture = Conjecture ? "conjecture" : "axiom";
+            var type = NaturalSpec ? "natural" : "set";
+            return $"{conjecture} {type} {Formula}";
+        }
     }
 }

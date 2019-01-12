@@ -79,6 +79,11 @@ namespace FolThresholdParser.FolSyntax
         {
             return Name;
         }
+
+        public override string ToString()
+        {
+            return Name;
+        }
     }
 
     public class SetOpExpression : SetExpression
@@ -116,6 +121,11 @@ namespace FolThresholdParser.FolSyntax
             return
                 $"{Op.ToString().ToLower()} ({Expr1.GetSmtAssert(identifiers)}) ({Expr2.GetSmtAssert(identifiers)})";
         }
+
+        public override string ToString()
+        {
+            return $"{Expr1} {Tokenizer.Keywords[(SyntaxKind)Op]} {Expr2}";
+        }
     }
 
     public class SetComplementExpression : SetExpression
@@ -138,6 +148,11 @@ namespace FolThresholdParser.FolSyntax
         {
             return
                 $"- {FolThresholdSystem.FolThresholdSystem.UniversalSetIdentifier} ({Expr.GetSmtAssert(identifiers)})";
+        }
+
+        public override string ToString()
+        {
+            return $"~{Expr}";
         }
     }
 }

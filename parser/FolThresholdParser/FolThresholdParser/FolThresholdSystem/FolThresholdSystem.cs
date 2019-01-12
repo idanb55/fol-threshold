@@ -94,30 +94,47 @@ namespace FolThresholdParser.FolThresholdSystem
             yield return "(set-logic ALL_SUPPORTED)";
             yield return "(set-info :status unsat)";
 
+            yield return string.Empty;
+
             foreach (var quorum in _identifiers.Values.OfType<Natural>())
             {
                 yield return $"(declare-fun {quorum.Name} () Int)";
             }
+
+            yield return string.Empty;
 
             foreach (var quorum in _identifiers.Values.OfType<Quorum>())
             {
                 yield return $"(declare-fun {quorum.Name} () (Set Int))";
             }
 
+            yield return string.Empty;
+
             foreach (var spec in _formulas.Where(spec => !spec.Conjecture))
             {
                 yield return $"(assert ({spec.Formula.GetSmtAssert(_identifiers)}))";
             }
+
+            yield return string.Empty;
 
             foreach (var quorum in _identifiers.Values.OfType<Quorum>().Where(quorum => !quorum.Constant))
             {
                 yield return $"(assert (subset {quorum.Name} {UniversalSetIdentifier}))";
             }
 
+            yield return string.Empty;
+
             foreach (var quorum in _identifiers.Values.OfType<Quorum>())
             {
                 var axiom = new NaturalFormula(new NatCardExpression(new SetVarExpression(quorum.Name)), quorum.Operation, quorum.Expression);
                 yield return $"(assert ({axiom.GetSmtAssert(_identifiers)}))";
+            }
+
+            yield return string.Empty;
+
+            foreach (var spec in _formulas.Where(spec => spec.Conjecture))
+            {
+                yield return $"; {spec}";
             }
         }
     }

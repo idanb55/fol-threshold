@@ -161,6 +161,11 @@ namespace FolThresholdParser.FolSyntax
         {
             return $"not ({_inner.GetSmtAssert(identifiers)})";
         }
+
+        public override string ToString()
+        {
+            return $"~{_inner}";
+        }
     }
 
     public class FormulaBind : Formula
@@ -231,6 +236,11 @@ namespace FolThresholdParser.FolSyntax
             return $"{GetBindTypeTextual()} (({_varName} (Set Int))) ({_inner.GetSmtAssert(identifiers)})"; // TODO add the quorum rule as an assumption
         }
 
+        public override string ToString()
+        {
+            return $"{GetBindTypeTextual()} {_varName}:{_varType}. {_inner}";
+        }
+
         public static Formula ParseInternal(SyntaxKind bindType, ArrayView<Token> tokens, Formula inner)
         {
             if (tokens.Length == 0) return inner;
@@ -284,6 +294,11 @@ namespace FolThresholdParser.FolSyntax
         {
             return $"{Tokenizer.Keywords[(SyntaxKind) Rel]} ({Expr1.GetSmtAssert(identifiers)}) ({Expr2.GetSmtAssert(identifiers)})";
         }
+
+        public override string ToString()
+        {
+            return $"{Expr1} {Tokenizer.Keywords[(SyntaxKind)Rel]} {Expr2}";
+        }
     }
 
     public class SetFormula : Formula
@@ -295,7 +310,7 @@ namespace FolThresholdParser.FolSyntax
         {
             Expr1 = expr1;
             Expr2 = expr2;
-            Rel = ToSetRelation(comparisonOp);
+            Rel = (SetRelation)comparisonOp;
         }
 
         public static Formula Parse(ArrayView<Token> tokens)
@@ -307,24 +322,9 @@ namespace FolThresholdParser.FolSyntax
 
         public enum SetRelation
         {
-            Equal,
-            NotEuqal,
-            Subseteq
-        }
-
-        public static SetRelation ToSetRelation(SyntaxKind comparisonOp)
-        {
-            switch (comparisonOp)
-            {
-                case SyntaxKind.LeqThanToken:
-                    return SetRelation.Subseteq;
-                case SyntaxKind.EqualToken:
-                    return SetRelation.Equal;
-                case SyntaxKind.InEqualToken:
-                    return SetRelation.NotEuqal;
-                default:
-                    throw new Exception($"Illegal syntax kind {comparisonOp}");
-            }
+            Equal = SyntaxKind.EqualToken,
+            NotEuqal = SyntaxKind.InEqualToken,
+            Subseteq = SyntaxKind.LeqThanToken
         }
 
         public override IEnumerable<string> VariablesToBind => Expr1.VariablesToBind.Concat(Expr2.VariablesToBind);
@@ -360,6 +360,11 @@ namespace FolThresholdParser.FolSyntax
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+        }
+
+        public override string ToString()
+        {
+            return $"{Expr1} {Tokenizer.Keywords[(SyntaxKind)Rel]} {Expr2}";
         }
     }
 }
