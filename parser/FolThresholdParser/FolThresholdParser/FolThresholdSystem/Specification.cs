@@ -29,7 +29,7 @@ namespace FolThresholdParser.FolThresholdSystem
 
         public string ToBoundIvyAxiom(Dictionary<string, Identifier> identifiers)
         {
-            return Formula.ToBoundIvyAxiomActual(identifiers);
+            return Formula.ToBoundIvyAxiomActual(identifiers, identifiers.Values.OfType<Quorum>().Where(quorum => !quorum.Constant).ToList());
         }
 
         public override string ToString()

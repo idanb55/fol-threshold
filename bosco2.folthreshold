@@ -9,8 +9,11 @@ quorum A >= n - t
 quorum B > (n + 3t) / 2
 quorum C > (n - t) / 2
 
+
+#conjecture set forall a:A,b:B. exists c:C. c <= a & b & ~f
+conjecture set forall a:A,b:B. C(a & b & ~f)
+
 conjecture set forall b:B,d:B. b & d & ~f != EMPTYSET
-conjecture set forall a:A,b:B. exists c:C. c <= a & b & ~f
 conjecture set forall b:B,c:C. b & c & ~f != EMPTYSET
 conjecture set forall b:B. b & ~f != EMPTYSET
 conjecture set forall c:C. c & ~f != EMPTYSET

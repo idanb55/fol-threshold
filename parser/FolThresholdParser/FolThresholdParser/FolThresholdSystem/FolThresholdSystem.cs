@@ -99,8 +99,14 @@ namespace FolThresholdParser.FolThresholdSystem
 
         public IEnumerable<string> AssertThresholdSmt2(Specification conjecture)
         {
+            var quorums = Identifiers.Values.OfType<Quorum>().Where(quorum => !quorum.Constant).ToList();
+
             yield return "(set-logic ALL_SUPPORTED)";
             yield return "(set-info :status unsat)";
+
+            yield return string.Empty;
+
+            yield return $"; {conjecture}";
 
             yield return string.Empty;
 
@@ -123,7 +129,7 @@ namespace FolThresholdParser.FolThresholdSystem
             // axioms concerning constants
             foreach (var spec in Formulas.Where(spec => !spec.Conjecture))
             {
-                yield return $"(assert {spec.Formula.GetSmtAssert(Identifiers)})";
+                yield return $"(assert {spec.Formula.GetSmtAssert(Identifiers, quorums)})";
             }
 
             // constant quorum thresholds
@@ -131,7 +137,7 @@ namespace FolThresholdParser.FolThresholdSystem
             {
                 yield return $"(assert (subset {quorum.Name} {UniversalSetIdentifier}))";
                 var axiom = new NaturalFormula(new NatCardExpression(new SetVarExpression(quorum.Name)), quorum.Operation, quorum.Expression);
-                yield return $"(assert {axiom.GetSmtAssert(Identifiers)})";
+                yield return $"(assert {axiom.GetSmtAssert(Identifiers, quorums)})";
             }
 
             yield return string.Empty;
@@ -154,14 +160,13 @@ namespace FolThresholdParser.FolThresholdSystem
                 {
                     [boundVar.VarName] = Identifiers[boundVar.VarType]
                 };
-                yield return $"(assert {axiom.GetSmtAssert(tempIdentifiers)})";
+                yield return $"(assert {axiom.GetSmtAssert(tempIdentifiers, quorums)})";
                 yield return string.Empty;
             }
 
             yield return string.Empty;
-
-            yield return $"; {conjecture}";
-            yield return $"(assert {formula.GetSmtAssertActual(Identifiers)})";
+            
+            yield return $"(assert {formula.GetSmtAssertActual(Identifiers, quorums)})";
 
             yield return string.Empty;
 

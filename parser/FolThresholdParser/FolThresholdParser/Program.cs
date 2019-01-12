@@ -47,6 +47,8 @@ namespace FolThresholdParser
             {
                 Console.WriteLine(ex);
             }
+            Console.WriteLine("Done.");
+            Console.Read();
         }
     }
 }

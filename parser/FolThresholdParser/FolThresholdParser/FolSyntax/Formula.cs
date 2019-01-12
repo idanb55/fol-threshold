@@ -59,9 +59,29 @@ namespace FolThresholdParser.FolSyntax
             }
 
             indexOfOperation = tokens.IndexOfFirstSyntaxKindNoThrow(SyntaxGeneralType.Keyword);
-            return new FormulaOperation(Parse(tokens.Take(indexOfOperation), type),
-                tokens[indexOfOperation].Type,
-                Parse(tokens.Skip(indexOfOperation + 1), type));
+            if (indexOfOperation > 0)
+            {
+                return new FormulaOperation(Parse(tokens.Take(indexOfOperation), type),
+                    tokens[indexOfOperation].Type,
+                    Parse(tokens.Skip(indexOfOperation + 1), type));
+            }
+            
+            // should be a relation now
+            if (tokens[0].Type == SyntaxKind.VariableNameToken)
+            {
+                var relationName = tokens[0].Value;
+                if(tokens[1].Type != SyntaxKind.OpenParenthesisToken)
+                    throw new Exception("expected '('");
+                var indexOfCloseParenthesis = tokens.Skip(1).IndexOfCloseParenthesis();
+                if (indexOfCloseParenthesis < 0)
+                    throw new Exception("Illegal formula");
+                if (indexOfCloseParenthesis + 1 != tokens.Length - 2)
+                    throw new Exception("Illegal formula");
+
+                return new SetRelationFormula(SetExpression.Parse(tokens.Skip(2).Take(indexOfCloseParenthesis)), relationName);
+            }
+
+            throw new Exception("Illegal formula format");
         }
 
         protected internal abstract IEnumerable<FormulaBind.Bind> BoundVariables { get; }
@@ -73,18 +93,18 @@ namespace FolThresholdParser.FolSyntax
                     new KeyValuePair<string, Identifier>(bind.VarName, identifiers[bind.VarType]))).ToDict();
         }
 
-        public string ToBoundIvyAxiomActual(Dictionary<string, Identifier> identifiers)
+        public string ToBoundIvyAxiomActual(Dictionary<string, Identifier> identifiers, List<Quorum> quorums)
         {
-            return ToBoundIvyAxiom(GetIdentifiersWithBoundVariables(identifiers));
+            return ToBoundIvyAxiom(GetIdentifiersWithBoundVariables(identifiers), quorums);
         }
 
-        public string GetSmtAssertActual(Dictionary<string, Identifier> identifiers)
+        public string GetSmtAssertActual(Dictionary<string, Identifier> identifiers, List<Quorum> quorums)
         {
-            return GetSmtAssert(GetIdentifiersWithBoundVariables(identifiers));
+            return GetSmtAssert(GetIdentifiersWithBoundVariables(identifiers), quorums);
         }
 
-        public abstract string ToBoundIvyAxiom(Dictionary<string, Identifier> identifiers);
-        public abstract string GetSmtAssert(Dictionary<string, Identifier> identifiers);
+        public abstract string ToBoundIvyAxiom(Dictionary<string, Identifier> identifiers, List<Quorum> quorums);
+        public abstract string GetSmtAssert(Dictionary<string, Identifier> identifiers, List<Quorum> quorums);
         public abstract Formula Negate();
         public virtual IEnumerable<FormulaBind.Bind> Release(FormulaBind.BindType bindType) { yield break; }
     }
@@ -100,7 +120,7 @@ namespace FolThresholdParser.FolSyntax
         protected internal override IEnumerable<FormulaBind.Bind> BoundVariables =>
             Form1.BoundVariables.Concat(Form2.BoundVariables);
 
-        public override string ToBoundIvyAxiom(Dictionary<string, Identifier> identifiers)
+        public override string ToBoundIvyAxiom(Dictionary<string, Identifier> identifiers, List<Quorum> quorums)
         {
             char op;
             switch (Op)
@@ -115,12 +135,12 @@ namespace FolThresholdParser.FolSyntax
                     throw new ArgumentOutOfRangeException();
             }
 
-            return $"{Form1.ToBoundIvyAxiom(identifiers)} {op} {Form2.ToBoundIvyAxiom(identifiers)}";
+            return $"{Form1.ToBoundIvyAxiom(identifiers, quorums)} {op} {Form2.ToBoundIvyAxiom(identifiers, quorums)}";
         }
 
-        public override string GetSmtAssert(Dictionary<string, Identifier> identifiers)
+        public override string GetSmtAssert(Dictionary<string, Identifier> identifiers, List<Quorum> quorums)
         {
-            return $"({Op.ToString().ToLower()} {Form1.GetSmtAssert(identifiers)} {Form2.GetSmtAssert(identifiers)})";
+            return $"({Op.ToString().ToLower()} {Form1.GetSmtAssert(identifiers, quorums)} {Form2.GetSmtAssert(identifiers, quorums)})";
         }
 
         public override Formula Negate()
@@ -157,14 +177,14 @@ namespace FolThresholdParser.FolSyntax
         public override IEnumerable<string> VariablesToBind => _inner.VariablesToBind;
         protected internal override IEnumerable<FormulaBind.Bind> BoundVariables => _inner.BoundVariables;
 
-        public override string ToBoundIvyAxiom(Dictionary<string, Identifier> identifiers)
+        public override string ToBoundIvyAxiom(Dictionary<string, Identifier> identifiers, List<Quorum> quorums)
         {
-            return $"~{_inner.ToBoundIvyAxiom(identifiers)}";
+            return $"~{_inner.ToBoundIvyAxiom(identifiers, quorums)}";
         }
 
-        public override string GetSmtAssert(Dictionary<string, Identifier> identifiers)
+        public override string GetSmtAssert(Dictionary<string, Identifier> identifiers, List<Quorum> quorums)
         {
-            return $"(not {_inner.GetSmtAssert(identifiers)})";
+            return $"(not {_inner.GetSmtAssert(identifiers, quorums)})";
         }
 
         public override Formula Negate()
@@ -190,7 +210,7 @@ namespace FolThresholdParser.FolSyntax
             ForallSet = SyntaxKind.ForallSetKeyword,
         }
 
-        private FormulaBind(BindType type, string varType, string varName, Formula inner)
+        public FormulaBind(BindType type, string varType, string varName, Formula inner)
         {
             _bind = new Bind(type, varType, varName);
             _inner = inner;
@@ -205,10 +225,10 @@ namespace FolThresholdParser.FolSyntax
 
         protected internal override IEnumerable<Bind> BoundVariables => _inner.BoundVariables.Concat(new[] {_bind});
 
-        public override string ToBoundIvyAxiom(Dictionary<string, Identifier> identifiers)
+        public override string ToBoundIvyAxiom(Dictionary<string, Identifier> identifiers, List<Quorum> quorums)
         {
-            if (_released) return _inner.ToBoundIvyAxiom(identifiers);
-            return $"{GetBindTypeTextual()} {_bind.VarName.ToUpper()}:quorum_{_bind.VarType.ToLower()}. {_inner.ToBoundIvyAxiom(identifiers)}";
+            if (_released) return _inner.ToBoundIvyAxiom(identifiers, quorums);
+            return $"{GetBindTypeTextual()} {_bind.VarName.ToUpper()}:quorum_{_bind.VarType.ToLower()}. {_inner.ToBoundIvyAxiom(identifiers, quorums)}";
         }
 
         private string GetBindTypeTextual()
@@ -229,10 +249,10 @@ namespace FolThresholdParser.FolSyntax
             return bind;
         }
 
-        public override string GetSmtAssert(Dictionary<string, Identifier> identifiers)
+        public override string GetSmtAssert(Dictionary<string, Identifier> identifiers, List<Quorum> quorums)
         {
-            if (_released) return _inner.GetSmtAssert(identifiers);
-            return $"({GetBindTypeTextual()} (({_bind.VarName.ToUpper()} (Set Int))) {_inner.GetSmtAssert(identifiers)})"; // TODO add the quorum rule as an assumption
+            if (_released) return _inner.GetSmtAssert(identifiers, quorums);
+            return $"({GetBindTypeTextual()} (({_bind.VarName.ToUpper()} (Set Int))) {_inner.GetSmtAssert(identifiers, quorums)})"; // TODO add the quorum rule as an assumption
         }
 
         public override Formula Negate()
@@ -319,12 +339,12 @@ namespace FolThresholdParser.FolSyntax
         }
 
         public override IEnumerable<string> VariablesToBind => Expr1.VariablesToBind.Concat(Expr2.VariablesToBind);
-        public override string ToBoundIvyAxiom(Dictionary<string, Identifier> identifiers)
+        public override string ToBoundIvyAxiom(Dictionary<string, Identifier> identifiers, List<Quorum> quorums)
         {
             throw new NotImplementedException();
         }
 
-        public override string GetSmtAssert(Dictionary<string, Identifier> identifiers)
+        public override string GetSmtAssert(Dictionary<string, Identifier> identifiers, List<Quorum> quorums)
         {
             var reduce1 = NatConstDivExpression.Reduce(Expr1);
             var reduce2 = NatConstDivExpression.Reduce(Expr2);
@@ -368,6 +388,51 @@ namespace FolThresholdParser.FolSyntax
         }
     }
 
+    public class SetRelationFormula : Formula
+    {
+        protected SetExpression Expr;
+        protected string RelationName;
+
+        public SetRelationFormula(SetExpression expr, string relationName)
+        {
+            Expr = expr;
+            RelationName = relationName;
+        }
+
+        public override IEnumerable<string> VariablesToBind => Expr.VariablesToBind;
+        protected internal override IEnumerable<FormulaBind.Bind> BoundVariables => new FormulaBind.Bind[] { };
+
+        public override string ToBoundIvyAxiom(Dictionary<string, Identifier> identifiers, List<Quorum> quorums)
+        {
+            var quorum = quorums.SingleOrDefault(quorumRel => string.Equals(quorumRel.Name, RelationName));
+            if (quorum == null) throw new Exception("Unknown quorum relation");
+
+            var formula = new FormulaBind(FormulaBind.BindType.ExistsSet, quorum.Name.ToLower(), quorum.Name.ToUpper(),
+                new SetFormula(Expr, SetFormula.SetRelation.Equal, new SetVarExpression(quorum.Name.ToLower())));
+            return formula.ToBoundIvyAxiom(
+                identifiers.Add(new KeyValuePair<string, Identifier>(quorum.Name.ToLower(), quorum)).ToDict(), quorums);
+        }
+
+        public override string GetSmtAssert(Dictionary<string, Identifier> identifiers, List<Quorum> quorums)
+        {
+            var quorum = quorums.SingleOrDefault(quorumRel => string.Equals(quorumRel.Name, RelationName));
+            if (quorum == null) throw new Exception("Unknown quorum relation");
+
+            var formula = new NaturalFormula(new NatCardExpression(Expr), quorum.Operation, quorum.Expression);
+            return formula.GetSmtAssert(identifiers, quorums);
+        }
+
+        public override string ToString()
+        {
+            return $"{RelationName}({Expr})";
+        }
+
+        public override Formula Negate()
+        {
+            return new FormulaNot(this);
+        }
+    }
+
     public class SetFormula : Formula
     {
         protected SetExpression Expr1, Expr2;
@@ -405,7 +470,7 @@ namespace FolThresholdParser.FolSyntax
         }
 
         public override IEnumerable<string> VariablesToBind => Expr1.VariablesToBind.Concat(Expr2.VariablesToBind);
-        public override string ToBoundIvyAxiom(Dictionary<string, Identifier> identifiers)
+        public override string ToBoundIvyAxiom(Dictionary<string, Identifier> identifiers, List<Quorum> quorums)
         {
             var expr1Ivy = Expr1.ToIvyAxiom(identifiers);
             var expr2Ivy = Expr2.ToIvyAxiom(identifiers);
@@ -422,7 +487,7 @@ namespace FolThresholdParser.FolSyntax
             }
         }
 
-        public override string GetSmtAssert(Dictionary<string, Identifier> identifiers)
+        public override string GetSmtAssert(Dictionary<string, Identifier> identifiers, List<Quorum> quorums)
         {
             var expr1Smt = Expr1.GetSmtAssert(identifiers);
             var expr2Smt = Expr2.GetSmtAssert(identifiers);

@@ -9,5 +9,10 @@ namespace FolThresholdParser.Utils
         {
             return pairs.ToDictionary(pair => pair.Key, pair => pair.Value);
         }
+
+        public static IEnumerable<TSource> Add<TSource>(this IEnumerable<TSource> source, TSource element)
+        {
+            return source.Concat(new[] {element});
+        }
     }
 }
