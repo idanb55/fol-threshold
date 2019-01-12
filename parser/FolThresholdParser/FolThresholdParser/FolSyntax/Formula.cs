@@ -361,13 +361,13 @@ namespace FolThresholdParser.FolSyntax
             switch (Rel)
             {
                 case NatRelation.Less:
-                    return NatRelation.Greater;
-                case NatRelation.Leq:
                     return NatRelation.Geq;
+                case NatRelation.Leq:
+                    return NatRelation.Greater;
                 case NatRelation.Greater:
-                    return NatRelation.Less;
-                case NatRelation.Geq:
                     return NatRelation.Leq;
+                case NatRelation.Geq:
+                    return NatRelation.Less;
                 case NatRelation.Inteq:
                     return NatRelation.Intneq;
                 case NatRelation.Intneq:
@@ -460,13 +460,16 @@ namespace FolThresholdParser.FolSyntax
         {
             Equal = SyntaxKind.EqualToken,
             NotEuqal = SyntaxKind.InEqualToken,
-            Subseteq = SyntaxKind.LeqThanToken
+            Subseteq = SyntaxKind.LeqThanToken,
+            Subset = SyntaxKind.LessThanToken,
         }
 
         public override Formula Negate()
         {
-            if(Rel == SetRelation.Subseteq) return new SetFormula(Expr2, SetRelation.Subseteq, Expr1); // TODO: not accurate
-            return new SetFormula(Expr1, Rel == SetRelation.Equal ? SetRelation.NotEuqal : SetRelation.Equal, Expr2);
+            if(Rel == SetRelation.Subseteq || Rel == SetRelation.Subset)
+                return new SetFormula(Expr2, Rel == SetRelation.Subseteq ? SetRelation.Subset : SetRelation.Subseteq, Expr1);
+            else
+                return new SetFormula(Expr1, Rel == SetRelation.Equal ? SetRelation.NotEuqal : SetRelation.Equal, Expr2);
         }
 
         public override IEnumerable<string> VariablesToBind => Expr1.VariablesToBind.Concat(Expr2.VariablesToBind);
@@ -482,6 +485,8 @@ namespace FolThresholdParser.FolSyntax
                     return $"~(forall N:node. {expr1Ivy} <-> {expr2Ivy})";
                 case SetRelation.Subseteq:
                     return $"forall N:node. {expr1Ivy} -> {expr2Ivy}";
+                case SetRelation.Subset:
+                    return $"~(forall N:node. {expr2Ivy} -> {expr1Ivy})";
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -499,6 +504,8 @@ namespace FolThresholdParser.FolSyntax
                     return $"(!= {expr1Smt} {expr2Smt})";
                 case SetRelation.Subseteq:
                     return $"(subset {expr1Smt} {expr2Smt})";
+                case SetRelation.Subset:
+                    return $"(not (subset {expr2Smt} {expr1Smt}))";
                 default:
                     throw new ArgumentOutOfRangeException();
             }
