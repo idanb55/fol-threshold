@@ -33,13 +33,7 @@ namespace FolThresholdParser
             {
                 CommandLine.Parser.Default.ParseArguments<Options>(args)
                     .WithParsed(Run)
-                    .WithNotParsed(errs =>
-                    {
-                        foreach (var error in errs)
-                        {
-                            Console.WriteLine(error);
-                        }
-                    });
+                    .WithNotParsed(errs => { });
             }
             catch (Exception ex)
             {
