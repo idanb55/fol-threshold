@@ -15,12 +15,15 @@ namespace FolThresholdParser.Utils
         private int _value;
         private readonly ProgressBarSimple _pbs;
 
-        public ProgressBar() : this(10)
+        private const int DefaultTotalSteps = 10;
+
+        public ProgressBar() : this(DefaultTotalSteps)
         {
         }
 
         public ProgressBar(int totalSteps)
         {
+            if (totalSteps == 0) totalSteps = DefaultTotalSteps;
             _totalSteps = totalSteps;
             _pbs = new ProgressBarSimple();
         }
@@ -45,7 +48,7 @@ namespace FolThresholdParser.Utils
 
     public class ProgressBarSimple : IDisposable, IProgress<double>
     {
-        private const int BlockCount = 30;
+        private const int BlockCount = 60;
         private readonly TimeSpan _animationInterval = TimeSpan.FromSeconds(1.0 / 8);
         private const string Animation = @"|/-\";
 

@@ -22,8 +22,8 @@ namespace FolThresholdParser.FolThresholdSystem
         {
             var p = Process.Start(new ProcessStartInfo
             {
-                FileName = @"c:\Users\User\ivy\cvc4-1.6-win64-opt.exe",
-                Arguments = "-m --lang smt",
+                FileName = Program.Options.Cvc4Path,
+                Arguments = "--lang smt",
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardInput = true,

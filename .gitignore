@@ -6,3 +6,4 @@
 /bin/*.pdb
 /bin/*.config
 /bin/*.vshost.exe*
+/out
