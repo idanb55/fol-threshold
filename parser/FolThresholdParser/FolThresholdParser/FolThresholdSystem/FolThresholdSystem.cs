@@ -207,7 +207,7 @@ namespace FolThresholdParser.FolThresholdSystem
         {
             for (var numberOfVars = 1; ; ++numberOfVars)
             {
-                foreach (var tuple in ProduceVarSetHelper(constantQuorums, quorums, numberOfVars))
+                foreach (var tuple in ProduceVarSetHelper(constantQuorums, 0, quorums, 0, numberOfVars))
                 {
                     yield return tuple;
                 }
@@ -216,8 +216,8 @@ namespace FolThresholdParser.FolThresholdSystem
 
         private int _variableIndex = 1;
 
-        private IEnumerable<Tuple<SetVarExpression[], FormulaBind.Bind[]>> ProduceVarSetHelper(Quorum[] constantQuorums,
-            Quorum[] quorums, int level)
+        private IEnumerable<Tuple<SetVarExpression[], FormulaBind.Bind[]>> ProduceVarSetHelper(Quorum[] constantQuorums, int constOffset,
+            Quorum[] quorums, int quorumOffset, int level)
         {
             int myLevel = level;
             if (myLevel == 0 || constantQuorums.Length + quorums.Length == 0)
@@ -227,20 +227,20 @@ namespace FolThresholdParser.FolThresholdSystem
                 yield break;
             }
 
-            for (var i = 0; i < constantQuorums.Length; ++i)
+            for (var i = constOffset; i < constantQuorums.Length; ++i)
             {
                 var newConstants = constantQuorums.ToList();
                 newConstants.RemoveAt(i);
-                foreach (var tuple in ProduceVarSetHelper(newConstants.ToArray(), quorums, myLevel - 1))
+                foreach (var tuple in ProduceVarSetHelper(newConstants.ToArray(), i, quorums, constOffset, myLevel - 1))
                 {
                     yield return new Tuple<SetVarExpression[], FormulaBind.Bind[]>(
                         tuple.Item1.Add(new SetVarExpression(constantQuorums[i].Name)).ToArray(), tuple.Item2);
                 }
             }
 
-            for (var i = 0; i < quorums.Length; ++i)
+            for (var i = quorumOffset; i < quorums.Length; ++i)
             {
-                foreach (var tuple in ProduceVarSetHelper(constantQuorums, quorums, level - 1))
+                foreach (var tuple in ProduceVarSetHelper(constantQuorums, constantQuorums.Length, quorums, i, level - 1))
                 {
                     string varName = $"{quorums[i].Name}_{StringUtils.IntToUniqueString(_variableIndex++)}";
                     yield return new Tuple<SetVarExpression[], FormulaBind.Bind[]>(

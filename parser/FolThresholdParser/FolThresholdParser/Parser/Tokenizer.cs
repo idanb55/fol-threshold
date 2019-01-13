@@ -33,7 +33,7 @@ namespace FolThresholdParser.Parser
 
         private readonly Dictionary<SyntaxKind, Regex> _patterns = new Dictionary<SyntaxKind, Regex>
         {
-            {SyntaxKind.VariableNameToken,     new Regex("^[a-zA-Z]+")},            
+            {SyntaxKind.VariableNameToken,     new Regex("^[a-zA-Z_]+")},            
             {SyntaxKind.LiteralNumberToken,   new Regex("^[0-9]+")   },
             {SyntaxKind.WhitespaceToken,   new Regex("^\\s+")   }
         };

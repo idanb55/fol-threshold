@@ -44,6 +44,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="FolThresholdSystem\Cvc4Verifier.cs" />
     <Compile Include="FolThresholdSystem\FolThresholdSystem.cs" />
     <Compile Include="FolThresholdSystem\Specification.cs" />
     <Compile Include="Utils\ArrayView.cs" />
@@ -58,7 +59,8 @@
     <Compile Include="Parser\Tokenizer.cs" />
     <Compile Include="Parser\TokenParser.cs" />
     <Compile Include="Utils\EnumerableUtils.cs" />
-    <Compile Include="Utils\IntToUniqueString.cs" />
+    <Compile Include="Utils\ProgressBar.cs" />
+    <Compile Include="Utils\StringUtils.cs" />
     <Compile Include="VennDiagram\VennDiagramIterator.cs" />
   </ItemGroup>
   <ItemGroup>

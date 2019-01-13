@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using FolThresholdParser.FolSyntax;
+using FolThresholdParser.FolThresholdSystem;
 using FolThresholdParser.Parser;
 using FolThresholdParser.Utils;
 
@@ -17,6 +19,7 @@ namespace FolThresholdParser
                 var inputFile = @"..\..\..\..\..\bosco2.folthreshold";
                 //var outputDir = $@"..\..\..\..\..\out_{DateTime.Now:yyyy_MM_dd_HH_mm_ss}";
                 var outputDir = $@"..\..\..\..\..\out";
+                var flagRunCvc4 = false;
 
                 var system = new FolThresholdSystem.FolThresholdSystem();
                 foreach (var t in Tokenizer.Tokenize(inputFile))
@@ -35,22 +38,19 @@ namespace FolThresholdParser
                     File.AppendAllLines(Path.Combine(outputDir, $"threshold_conjecture{counter:D5}.smt2"), system.AssertThresholdSmt2(specification));
                     counter++;
                 }
-                
-                counter = 0;
-                foreach (var specification in system.ProduceConjectures().Take(9999))
-                {
-                    File.AppendAllLines(Path.Combine(outputDir, $"auto_threshold_conjecture{counter:D5}.smt2"), system.AssertThresholdSmt2(specification));
-                    counter++;
-                }
 
-                /**foreach (var bapaSetExpression in VennDiagram.VennDiagramIterator.GetVennZonesHelper(new []
+                Directory.CreateDirectory(Path.Combine(outputDir, "auto_threshold_conjecture"));
+                
+                var total = 688;
+                using (var ps = new ProgressBar(total))
                 {
-                    new SetVarExpression("A1"), new SetVarExpression("B1"), new SetVarExpression("C1"),
-                }))
-                {
-                    Console.WriteLine(bapaSetExpression);
-                    Console.Read();
-                }**/
+                    foreach (var specification in system.ProduceConjectures().Take(total).Verify(system, ps))
+                    {
+                        var resultThresholdPath = Path.Combine(outputDir, "auto_threshold_conjecture.threshold");
+
+                        File.AppendAllLines(resultThresholdPath, new[] {specification.ToString()});
+                    }
+                }
             }
             catch (Exception ex)
             {

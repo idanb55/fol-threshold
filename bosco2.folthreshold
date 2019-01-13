@@ -9,16 +9,48 @@ quorum A >= n - t
 quorum B > (n + 3t) / 2
 quorum C > (n - t) / 2
 
+conjecture set ~f != EMPTYSET
+conjecture set C(~f)
+conjecture set forall A_b:A. A_b != EMPTYSET
+conjecture set forall A_b:A. A(A_b)
+conjecture set forall A_b:A. C(A_b)
+conjecture set forall B_c:B. B_c != EMPTYSET
+conjecture set forall B_c:B. B(B_c)
+conjecture set forall B_c:B. C(B_c)
+conjecture set forall C_d:C. C_d != EMPTYSET
+conjecture set forall C_d:C. C(C_d)
+conjecture set forall A_e:A. C(A_e & ~f)
+conjecture set forall B_f:B. C(B_f & ~f)
+conjecture set forall A_i:A. forall A_h:A. A_h & A_i != EMPTYSET
+conjecture set forall A_i:A. forall A_h:A. C(A_h & A_i)
+conjecture set forall A_k:A. forall B_j:B. B_j & A_k != EMPTYSET
+conjecture set forall A_k:A. forall B_j:B. C(B_j & A_k)
+conjecture set forall A_m:A. forall C_l:C. C_l & A_m != EMPTYSET
+conjecture set forall B_o:B. forall B_n:B. B_n & B_o != EMPTYSET
+conjecture set forall B_q:B. forall C_p:C. C_p & B_q != EMPTYSET
+conjecture set forall A_u:A. forall A_t:A. A_t & A_u & ~f != EMPTYSET
+conjecture set forall A_w:A. forall B_v:B. B_v & A_w & ~f != EMPTYSET
+conjecture set forall A_bh:A. forall A_bg:A. forall A_bf:A. A_bf & A_bg & A_bh != EMPTYSET
+conjecture set forall A_bk:A. forall A_bj:A. forall B_bi:B. B_bi & A_bj & A_bk != EMPTYSET
+conjecture set forall A_bk:A. forall A_bj:A. forall B_bi:B. C(B_bi & A_bj & A_bk)
+conjecture set forall A_bq:A. forall B_bp:B. forall B_bo:B. B_bo & B_bp & A_bq != EMPTYSET
+conjecture set forall A_bt:A. forall B_bs:B. forall C_br:C. C_br & B_bs & A_bt != EMPTYSET
+
+conjecture set forall A_w:A. forall B_v:B. C(B_v & A_w & ~f)
+conjecture set forall B_ba:B. forall B_z:B. B_z & B_ba & ~f != EMPTYSET
+conjecture set forall B_bc:B. forall C_bb:C. C_bb & B_bc & ~f != EMPTYSET
+conjecture set forall B_f:B. B_f & ~f != EMPTYSET
+conjecture set forall C_g:C. C_g & ~f != EMPTYSET
+conjecture set forall A_e:A. A_e & ~f != EMPTYSET
+conjecture set A(~f)
 
 #conjecture set forall a:A,b:B. exists c:C. c <= a & b & ~f
-conjecture set forall a:A,b:B. C(a & b & ~f)
-
-conjecture set forall b:B,d:B. b & d & ~f != EMPTYSET
-conjecture set forall b:B,c:C. b & c & ~f != EMPTYSET
-conjecture set forall b:B. b & ~f != EMPTYSET
-conjecture set forall c:C. c & ~f != EMPTYSET
-conjecture set exists a:A. a <= ~f
-conjecture set forall a:A. a & ~f != EMPTYSET
+#conjecture set forall b:B,d:B. b & d & ~f != EMPTYSET
+#conjecture set forall b:B,c:C. b & c & ~f != EMPTYSET
+#conjecture set forall b:B. b & ~f != EMPTYSET
+#conjecture set forall c:C. c & ~f != EMPTYSET
+#conjecture set exists a:A. a <= ~f
+#conjecture set forall a:A. a & ~f != EMPTYSET
 
 # Weak 
 #axiom natural n > 5t
