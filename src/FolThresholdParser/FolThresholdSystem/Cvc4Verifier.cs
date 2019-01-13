@@ -20,7 +20,7 @@ namespace FolThresholdParser.FolThresholdSystem
 
         public static bool Verify(IEnumerable<string> smtContent)
         {
-            var p = Process.Start(new ProcessStartInfo
+            using (var p = Process.Start(new ProcessStartInfo
             {
                 FileName = Program.Options.Cvc4Path,
                 Arguments = "--lang smt",
@@ -28,17 +28,21 @@ namespace FolThresholdParser.FolThresholdSystem
                 RedirectStandardOutput = true,
                 RedirectStandardInput = true,
                 CreateNoWindow = true
-            });
-            if (p == null) throw new Exception("Could not start process");
-            foreach (var line in smtContent)
+            }))
             {
-                p.StandardInput.WriteLine(line);
+                if (p == null) throw new Exception("Could not start process");
+                foreach (var line in smtContent)
+                {
+                    p.StandardInput.WriteLine(line);
+                }
+
+                if (p.StandardOutput.EndOfStream) throw new Exception("Could not read result from process");
+                var cvc4Result = p.StandardOutput.ReadLine() ?? "Error";
+
+                p.Kill();
+
+                return cvc4Result == "unsat";
             }
-
-            if(p.StandardOutput.EndOfStream) throw new Exception("Could not read result from process");
-            var cvc4Result = p.StandardOutput.ReadLine() ?? "Error";
-
-            return cvc4Result == "unsat";
         }
     }
 }

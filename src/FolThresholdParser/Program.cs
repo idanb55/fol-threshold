@@ -22,11 +22,17 @@ namespace FolThresholdParser
         [Option('c', "cvc", Required = false, HelpText = "CVC4 solver path", Default = "cvc4-1.6-win64-opt.exe")]
         public string Cvc4Path { get; set; }
 
-        [Option('a', "auto-conjecture", Required = false, HelpText = "Automatically produce conjectures to file")]
+        [Option('u', "auto-conjecture", Required = false, HelpText = "Automatically produce conjectures to file")]
         public string AutoConjectureOutput { get; set; }
+
+        [Option('a', "append-auto-conjecture", Required = false, HelpText = "Append to automatic conjecture file.")]
+        public bool AppendToAutoConjectureFile { get; set; }
 
         [Option('n', "auto-conjecture-count", Required = false, HelpText = "Number of conjectures to try")]
         public int AutoConjectureCount { get; set; }
+
+        [Option('s', "auto-conjecture-skip", Required = false, HelpText = "Number of conjectures to skip")]
+        public int AutoConjectureSkip { get; set; }
     }
 
     public class Program
@@ -83,20 +89,22 @@ namespace FolThresholdParser
 
             if (string.IsNullOrEmpty(opts.AutoConjectureOutput)) return;
 
+            if(File.Exists(opts.AutoConjectureOutput) && !opts.AppendToAutoConjectureFile)
+                File.Delete(opts.AutoConjectureOutput);
+
             Console.WriteLine("= Starting producing conjectures");
             counter = 0;
             using (var ps = new ProgressBar(opts.AutoConjectureCount))
             {
-                foreach (var specification in system.ProduceConjectures().Take(opts.AutoConjectureCount).Verify(system, ps))
+                foreach (var specification in system.ProduceConjectures().Skip(opts.AutoConjectureSkip)
+                    .Take(opts.AutoConjectureCount).Verify(system, ps))
                 {
-                    var resultThresholdPath = Path.Combine(opts.OutputDir, opts.AutoConjectureOutput);
-
-                    File.AppendAllLines(resultThresholdPath, new[] {specification.ToString()});
+                    File.AppendAllLines(opts.AutoConjectureOutput, new[] {specification.ToString()});
                     counter++;
                 }
             }
 
-            Console.WriteLine("= Success");
+            Console.WriteLine($"= Success: Found {counter} conjectures");
         }
     }
 }
