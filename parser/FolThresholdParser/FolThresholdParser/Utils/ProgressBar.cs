@@ -11,9 +11,13 @@ namespace FolThresholdParser.Utils
 
     public class ProgressBar : IDisposable, IProgress<int>, IProgress
     {
-        private readonly int _totalSteps;
+        private int _totalSteps;
         private int _value;
         private readonly ProgressBarSimple _pbs;
+
+        public ProgressBar() : this(10)
+        {
+        }
 
         public ProgressBar(int totalSteps)
         {
@@ -29,6 +33,7 @@ namespace FolThresholdParser.Utils
         public void Report(int value)
         {
             _value = value;
+            if (_value > _totalSteps) _totalSteps *= 2;
             _pbs.Report((double) value / _totalSteps);
         }
 
