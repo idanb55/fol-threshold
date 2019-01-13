@@ -31,7 +31,6 @@ namespace FolThresholdParser
         {
             try
             {
-                Options = new Options();
                 CommandLine.Parser.Default.ParseArguments<Options>(args)
                     .WithParsed(Run)
                     .WithNotParsed(errs =>
@@ -53,6 +52,8 @@ namespace FolThresholdParser
 
         private static void Run(Options opts)
         {
+            Options = opts;
+
             var system = new FolThresholdSystem.FolThresholdSystem();
             foreach (var t in Tokenizer.Tokenize(opts.TresholdSpecFilePath))
             {
@@ -64,7 +65,7 @@ namespace FolThresholdParser
 
             File.AppendAllLines(Path.Combine(opts.OutputDir, "ivy.ivy"), system.ToIvyAxioms());
 
-            int counter = 0;
+            var counter = 0;
             foreach (var specification in system.Formulas.Where(spec => spec.Conjecture))
             {
                 File.AppendAllLines(Path.Combine(opts.OutputDir, $"threshold_conjecture{counter:D5}.smt2"),
@@ -74,7 +75,7 @@ namespace FolThresholdParser
 
             Directory.CreateDirectory(Path.Combine(opts.OutputDir, "auto_threshold_conjecture"));
 
-            var total = 688;
+            const int total = 688;
             using (var ps = new ProgressBar())
             {
                 foreach (var specification in system.ProduceConjectures().Take(total).Verify(system, ps))
