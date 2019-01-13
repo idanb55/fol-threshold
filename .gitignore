@@ -1,6 +1,8 @@
-/parser/FolThresholdParser/FolThresholdParser/bin
-/parser/FolThresholdParser/FolThresholdParser/obj
-/parser/FolThresholdParser/*.user
 .suo
 /src/FolThresholdParser/bin
 /src/FolThresholdParser/obj
+/src/*.user
+/bin/*.xml
+/bin/*.pdb
+/bin/*.config
+/bin/*.vshost.exe*
